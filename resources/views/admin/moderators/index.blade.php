@@ -1,6 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+    <div class="bg-blue-500 p-4 rounded-md">
+        <h2 class="font-semibold text-xl text-white leading-tight">
             {{ __('Manage Moderators') }}
         </h2>
     </x-slot>
