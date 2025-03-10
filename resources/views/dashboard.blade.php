@@ -1,25 +1,22 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
+        <div class="bg-blue-500 p-4 rounded-md">
+            <h2 class="font-semibold text-xl text-white leading-tight">
+                {{ __('Admin User') }}
+            </h2>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                <x-welcome />
-            </div>
+    <div class="min-h-screen bg-cover bg-center flex justify-center items-center" 
+         style="background-image: url('{{ asset('images/666.avif') }}');">
+        
+        @if(auth()->user()->role === 'admin')
+            <a href="{{ route('admin.moderators.index') }}" 
+               class="px-10 py-4 text-xl font-bold w-64 text-center bg-red-500 text-black rounded-lg shadow-md 
+                      hover:bg-blue-600 mt-[-560px] border-4 border-green-400  ring-8 ring-yellow-500 ring-opacity-75">
+                Manage Moderators
+            </a>
+        @endif
 
-            <!-- Show Manage Moderators button only for Admins -->
-            @if(auth()->user()->role === 'admin')
-                <div class="mt-4 p-4 bg-white shadow sm:rounded-lg text-center">
-                    <a href="{{ route('admin.moderators.index') }}" 
-                        class="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600">
-                        Manage Moderators
-                    </a>
-                </div>
-            @endif
-        </div>
     </div>
 </x-app-layout>
