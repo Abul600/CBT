@@ -23,7 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-    ]; // ❌ Removed 'role' since roles are managed via Spatie
+    ]; // ❌ 'role' removed as Spatie manages roles
 
     /**
      * The attributes that should be hidden for serialization.
@@ -57,7 +57,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Assign a role to the user on creation.
+     * Automatically assign the "student" role when a user is created (if no role is specified).
      */
     protected static function boot()
     {
@@ -65,7 +65,7 @@ class User extends Authenticatable
 
         static::created(function ($user) {
             if (!$user->hasAnyRole(['admin', 'moderator', 'paper_seater', 'student'])) {
-                $user->assignRole('student'); // Default role assignment
+                $user->assignRole('student'); // ✅ Default role assignment for self-registered users
             }
         });
     }
