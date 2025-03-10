@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles; // ✅ Added Spatie Permissions
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -47,15 +47,26 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Assign a role to the user on creation.
+     */
+    protected static function boot()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        parent::boot();
+
+        static::created(function ($user) {
+            if (!$user->hasAnyRole(['admin', 'moderator', 'paper_seater', 'student'])) {
+                $user->assignRole('student'); // Default role
+            }
+        });
     }
 }

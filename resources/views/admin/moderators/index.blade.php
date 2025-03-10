@@ -10,17 +10,24 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                 <a href="{{ route('admin.moderators.create') }}" class="px-4 py-2 bg-blue-500 text-white rounded">Add Moderator</a>
-                <table class="table-auto w-full mt-4">
+
+                @if(session('success'))
+                    <div class="mt-3 p-3 bg-green-200 text-green-700 rounded">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <table class="table-auto w-full mt-4 border-collapse border border-gray-300">
                     <thead>
-                        <tr>
-                            <th class="px-4 py-2">Name</th>
-                            <th class="px-4 py-2">Email</th>
-                            <th class="px-4 py-2">Actions</th>
+                        <tr class="bg-gray-200">
+                            <th class="px-4 py-2 border">Name</th>
+                            <th class="px-4 py-2 border">Email</th>
+                            <th class="px-4 py-2 border">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($moderators as $moderator)
-                            <tr>
+                        @forelse ($moderators as $moderator)
+                            <tr class="hover:bg-gray-100">
                                 <td class="border px-4 py-2">{{ $moderator->name }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->email }}</td>
                                 <td class="border px-4 py-2">
@@ -32,7 +39,11 @@
                                     </form>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center p-4">No moderators found.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

@@ -13,24 +13,51 @@
                         shadow-2xl sm:rounded-lg p-6 border border-white/30">
                 <form method="POST" action="{{ route('admin.moderators.store') }}">
                     @csrf
+
                     <div>
                         <label class="text-black font-semibold">Name</label>
-                        <input type="text" name="name" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="Enter Name" required>
+                        <input type="text" name="name" value="{{ old('name') }}" 
+                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               placeholder="Enter Name" required>
+                        @error('name')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
                     </div>
+
                     <div class="mt-4">
                         <label class="text-black font-semibold">Email</label>
-                        <input type="email" name="email" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="Enter Email" required>
+                        <input type="email" name="email" value="{{ old('email') }}" 
+                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               placeholder="Enter Email" required>
+                        @error('email')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
                     </div>
+
                     <div class="mt-4">
                         <label class="text-black font-semibold">Password</label>
-                        <input type="password" name="password" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="Enter Password" required>
+                        <input type="password" name="password" 
+                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               placeholder="Enter Password" required>
+                        @error('password')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
                     </div>
+
                     <div class="mt-4">
                         <label class="text-black font-semibold">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="Confirm Password" required>
+                        <input type="password" name="password_confirmation" 
+                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               placeholder="Confirm Password" required>
                     </div>
+
                     <div class="mt-4">
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 transition">
+                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded 
+                                                       hover:bg-yellow-300 transition">
                             Add Moderator
                         </button>
                     </div>
