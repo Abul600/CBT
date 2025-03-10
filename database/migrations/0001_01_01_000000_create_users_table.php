@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('student'); // ✅ Added role column with default value
+            $table->string('role')->default('moderator'); // ✅ Default role is now 'moderator'
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable()->constrained()->nullOnDelete();
             $table->string('profile_photo_path', 2048)->nullable();
