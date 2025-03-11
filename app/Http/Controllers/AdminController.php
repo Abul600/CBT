@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
@@ -38,25 +37,24 @@ class AdminController extends Controller
     public function storeModerator(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        // Create the user
+        // Create the user with the role explicitly set to 'moderator'
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'role'     => 'moderator', // Explicitly assign the moderator role
         ]);
 
-        // Assign 'moderator' role using Spatie
-        $user->assignRole('moderator');
+        // Also assign the Spatie permission role (if you're using it for permissions)
+        $user->syncRoles(['moderator']);
 
-        // Debugging: Log the role assignment
-        \Log::info('Moderator created:', ['id' => $user->id, 'roles' => $user->getRoleNames()]);
-
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator added successfully');
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator added successfully.');
     }
 
     // Show the form for editing a moderator
@@ -69,22 +67,24 @@ class AdminController extends Controller
     public function updateModerator(Request $request, User $moderator)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $moderator->id,
         ]);
 
         $moderator->update([
-            'name' => $request->name,
+            'name'  => $request->name,
             'email' => $request->email,
         ]);
 
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator updated successfully');
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator updated successfully.');
     }
 
     // Delete a moderator
     public function destroyModerator(User $moderator)
     {
         $moderator->delete();
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator deleted successfully');
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator deleted successfully.');
     }
 }

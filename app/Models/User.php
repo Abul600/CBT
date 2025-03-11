@@ -23,7 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-    ]; // ❌ 'role' removed as Spatie manages roles
+        'role', // role is fillable now
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -47,26 +48,15 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
-
-    /**
-     * Automatically assign the "student" role when a user is created (if no role is specified).
-     */
-    protected static function boot()
+    protected function casts(): array
     {
-        parent::boot();
-
-        static::created(function ($user) {
-            if (!$user->hasAnyRole(['admin', 'moderator', 'paper_seater', 'student'])) {
-                $user->assignRole('student'); // ✅ Default role assignment for self-registered users
-            }
-        });
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

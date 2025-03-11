@@ -11,25 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Create the 'users' table
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role')->default('moderator'); // ✅ Default role is now 'moderator'
+            // Role column with a default value of 'student'
+            $table->string('role')->default('student');
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable()->constrained()->nullOnDelete();
             $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamps();
         });
 
+        // Create the 'password_reset_tokens' table
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        // Create the 'sessions' table
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
