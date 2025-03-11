@@ -14,9 +14,10 @@
                 <form method="POST" action="{{ route('admin.moderators.store') }}">
                     @csrf
 
+                    <!-- Name Field -->
                     <div>
-                        <label class="text-black font-semibold">Name</label>
-                        <input type="text" name="name" value="{{ old('name') }}" 
+                        <label for="name" class="text-black font-semibold">Name</label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}" 
                                class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                placeholder="Enter Name" required>
@@ -25,9 +26,10 @@
                         @enderror
                     </div>
 
+                    <!-- Email Field -->
                     <div class="mt-4">
-                        <label class="text-black font-semibold">Email</label>
-                        <input type="email" name="email" value="{{ old('email') }}" 
+                        <label for="email" class="text-black font-semibold">Email</label>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" 
                                class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                placeholder="Enter Email" required>
@@ -36,9 +38,10 @@
                         @enderror
                     </div>
 
+                    <!-- Password Field -->
                     <div class="mt-4">
-                        <label class="text-black font-semibold">Password</label>
-                        <input type="password" name="password" 
+                        <label for="password" class="text-black font-semibold">Password</label>
+                        <input type="password" id="password" name="password" 
                                class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                placeholder="Enter Password" required>
@@ -47,17 +50,31 @@
                         @enderror
                     </div>
 
+                    <!-- Confirm Password Field -->
                     <div class="mt-4">
-                        <label class="text-black font-semibold">Confirm Password</label>
-                        <input type="password" name="password_confirmation" 
+                        <label for="password_confirmation" class="text-black font-semibold">Confirm Password</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" 
                                class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                placeholder="Confirm Password" required>
                     </div>
 
+                    <!-- Role Selection Box -->
                     <div class="mt-4">
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded 
-                                                       hover:bg-yellow-300 transition">
+                        <label for="role" class="text-black font-semibold">Role</label>
+                        <select id="role" name="role" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" required>
+                            <option value="">-- Select Role --</option>
+                            <option value="moderator" {{ old('role') == 'moderator' ? 'selected' : '' }}>Moderator</option>
+                            <option value="paper setter" {{ old('role') == 'paper setter' ? 'selected' : '' }}>Paper Setter</option>
+                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>Student</option>
+                        </select>
+                        @error('role')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 transition">
                             Add Moderator
                         </button>
                     </div>
