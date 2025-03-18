@@ -29,12 +29,13 @@ class CreateNewUser implements CreatesNewUsers
                 'password' => Hash::make($validated['password']), // ✅ Always hash passwords
             ]);
 
-            // ✅ Assign "Student" Role (Check if exists first)
-            $studentRole = Role::where('name', 'student')->first();
+            // ✅ Ensure "Student" Role Exists (Case-Sensitive Fix)
+            $studentRole = Role::where('name', 'Student')->first();
+
             if ($studentRole) {
-                $user->assignRole('student');
+                $user->assignRole($studentRole); // ✅ Assign correct role with correct capitalization
             } else {
-                throw new \Exception("Role 'student' does not exist.");
+                throw new \Exception("❌ Role 'Student' does not exist.");
             }
 
             return $user;
