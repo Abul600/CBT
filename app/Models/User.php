@@ -8,28 +8,29 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Traits\HasRoles; // ✅ Import Spatie's HasRoles
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasProfilePhoto, Notifiable, TwoFactorAuthenticatable, HasRoles;
+    use HasApiTokens, 
+        HasFactory, 
+        HasProfilePhoto, 
+        Notifiable, 
+        TwoFactorAuthenticatable, 
+        HasRoles; // ✅ Ensure HasRoles is included
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // role is fillable now
+        'role_id', // ✅ Store the role ID for Spatie's permission system
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -40,23 +41,38 @@ class User extends Authenticatable
 
     /**
      * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
      */
     protected $appends = [
         'profile_photo_url',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Define relationship with Role model (if needed)
+     */
+    public function role()
+    {
+        return $this->belongsTo(\Spatie\Permission\Models\Role::class, 'role_id');
+    }
+
+    /**
+     * Redirect user based on their role.
+     */
+    public function redirectToRoleDashboard()
+    {
+        return match($this->getRoleNames()->first()) { // ✅ Uses Spatie's role system
+            'admin'        => redirect()->route('admin.dashboard'),
+            'moderator'    => redirect()->route('moderator.dashboard'),
+            'paper_setter' => redirect()->route('paper_setter.dashboard'),
+            'student'      => redirect()->route('student.dashboard'),
+            default        => redirect('/dashboard'),
+        };
     }
 }

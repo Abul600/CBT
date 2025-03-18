@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="bg-blue-500 p-4 rounded-md">
             <h2 class="font-semibold text-xl text-white leading-tight">
-                {{ __('Add Moderator') }}
+                {{ __('Create New User') }}  {{-- Updated title for clarity --}}
             </h2>
         </div>
     </x-slot>
@@ -15,14 +15,13 @@
                     @csrf
 
                     <!-- Name Field -->
-                    <div>
+                    <div class="mb-4">
                         <label for="name" class="text-black font-semibold">Name</label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" 
-                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
-                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               class="form-input-style" 
                                placeholder="Enter Name" required>
                         @error('name')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -30,11 +29,10 @@
                     <div class="mt-4">
                         <label for="email" class="text-black font-semibold">Email</label>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" 
-                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
-                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               class="form-input-style" 
                                placeholder="Enter Email" required>
                         @error('email')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -42,11 +40,10 @@
                     <div class="mt-4">
                         <label for="password" class="text-black font-semibold">Password</label>
                         <input type="password" id="password" name="password" 
-                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
-                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               class="form-input-style" 
                                placeholder="Enter Password" required>
                         @error('password')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -54,32 +51,51 @@
                     <div class="mt-4">
                         <label for="password_confirmation" class="text-black font-semibold">Confirm Password</label>
                         <input type="password" id="password_confirmation" name="password_confirmation" 
-                               class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 
-                                      focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                               class="form-input-style" 
                                placeholder="Confirm Password" required>
                     </div>
 
-                    <!-- Role Selection Box -->
+                    <!-- Role Selection -->
                     <div class="mt-4">
-                        <label for="role" class="text-black font-semibold">Role</label>
-                        <select id="role" name="role" class="border rounded p-2 w-full bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none" required>
+                        <label for="role" class="text-black font-semibold">User Role</label>
+                        <select id="role" name="role" class="form-input-style" required>
                             <option value="">-- Select Role --</option>
-                            <option value="moderator" {{ old('role') == 'moderator' ? 'selected' : '' }}>Moderator</option>
-                            <option value="paper setter" {{ old('role') == 'paper setter' ? 'selected' : '' }}>Paper Setter</option>
-                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>Student</option>
+                            @foreach(['admin', 'moderator', 'paper_seater', 'student'] as $role)
+                                <option value="{{ $role }}" {{ old('role') == $role ? 'selected' : '' }}>
+                                    {{ ucfirst(str_replace('_', ' ', $role)) }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('role')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                            <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="mt-4">
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 transition">
-                            Add Moderator
+                        <button type="submit" class="btn-primary">
+                            Create User  {{-- Updated button text --}}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            .form-input-style {
+                @apply border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                       focus:ring-2 focus:ring-yellow-400 focus:outline-none;
+            }
+            
+            .error-message {
+                @apply text-red-500 text-sm mt-1;
+            }
+            
+            .btn-primary {
+                @apply px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 
+                       transition transform hover:scale-105;
+            }
+        </style>
+    @endpush
 </x-app-layout>

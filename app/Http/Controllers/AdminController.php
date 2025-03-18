@@ -20,10 +20,10 @@ class AdminController extends Controller
         return view('admin.dashboard');
     }
 
-    // Show list of moderators
+    // Display list of moderators
     public function moderators()
     {
-        $moderators = User::role('moderator')->get(); // Fetch users with the 'moderator' role
+        $moderators = User::role('moderator')->get();
         return view('admin.moderators.index', compact('moderators'));
     }
 
@@ -33,28 +33,30 @@ class AdminController extends Controller
         return view('admin.moderators.create');
     }
 
-    // Store a newly created moderator
+    // Store a newly created moderator (or any user with a chosen role)
     public function storeModerator(Request $request)
     {
+        // Validate input
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
+            'role'     => 'required|string|in:admin,moderator,paper setter,student',
         ]);
 
-        // Create the user with the role explicitly set to 'moderator'
+        // Create the user with the provided role
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'moderator', // Explicitly assign the moderator role
+            'role'     => $request->role, // Use role from the form
         ]);
 
-        // Also assign the Spatie permission role (if you're using it for permissions)
-        $user->syncRoles(['moderator']);
+        // Use Spatie's syncRoles to assign the role for permission management
+        $user->syncRoles([$request->role]);
 
         return redirect()->route('admin.moderators.index')
-            ->with('success', 'Moderator added successfully.');
+            ->with('success', 'User created successfully with role ' . $request->role);
     }
 
     // Show the form for editing a moderator
@@ -63,21 +65,25 @@ class AdminController extends Controller
         return view('admin.moderators.edit', compact('moderator'));
     }
 
-    // Update moderator details
+    // Update the moderator's details
     public function updateModerator(Request $request, User $moderator)
     {
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $moderator->id,
+            'role'  => 'required|string|in:admin,moderator,paper setter,student',
         ]);
 
         $moderator->update([
             'name'  => $request->name,
             'email' => $request->email,
+            'role'  => $request->role,
         ]);
 
+        $moderator->syncRoles([$request->role]);
+
         return redirect()->route('admin.moderators.index')
-            ->with('success', 'Moderator updated successfully.');
+            ->with('success', 'User updated successfully.');
     }
 
     // Delete a moderator
@@ -85,6 +91,6 @@ class AdminController extends Controller
     {
         $moderator->delete();
         return redirect()->route('admin.moderators.index')
-            ->with('success', 'Moderator deleted successfully.');
+            ->with('success', 'User deleted successfully.');
     }
 }
