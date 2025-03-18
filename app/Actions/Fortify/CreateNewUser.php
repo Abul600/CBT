@@ -3,40 +3,39 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Laravel\Jetstream\Jetstream;
-use Spatie\Permission\Models\Role; // ✅ Import Role for assigning roles
-use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    use PasswordValidationRules;
-
-    /**
-     * Validate and create a newly registered user.
-     *
-     * @param  array<string, string>  $input
-     */
     public function create(array $input): User
     {
-        Validator::make($input, [
+        // ✅ Validate User Input
+        $validated = Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => $this->passwordRules(),
-            'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
+            'password' => ['required', 'confirmed', Password::defaults()],
         ])->validate();
 
-        return DB::transaction(function () use ($input) {
+        return DB::transaction(function () use ($validated) {
+            // ✅ Create User Securely
             $user = User::create([
-                'name' => $input['name'],
-                'email' => $input['email'],
-                'password' => Hash::make($input['password']),
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']), // ✅ Always hash passwords
             ]);
 
-            // ✅ Assign the default role "student" to the new user
-            $user->assignRole('student');
+            // ✅ Assign "Student" Role (Check if exists first)
+            $studentRole = Role::where('name', 'student')->first();
+            if ($studentRole) {
+                $user->assignRole('student');
+            } else {
+                throw new \Exception("Role 'student' does not exist.");
+            }
 
             return $user;
         });
