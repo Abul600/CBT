@@ -25,8 +25,14 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'district',
         'password',
+<<<<<<< HEAD
         'role_id', // ✅ Store the role ID for Spatie's permission system
+=======
+        'role',
+>>>>>>> ab83f84 (minor changes)
     ];
 
     /**

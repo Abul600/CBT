@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Moderator;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -15,13 +16,26 @@ class ModeratorController extends Controller
         $this->middleware(['auth', 'role:Moderator']);
     }
 
-    // ✅ Display the moderator dashboard
+    // ✅ Moderator Dashboard
     public function dashboard()
     {
         return view('moderator.dashboard');
     }
 
-    // ✅ Display the list of moderators
+    // ✅ View Paper Setters
+    public function paperSetters()
+    {
+        $paperSetters = User::role('paper_seater')->get();
+        return view('moderator.paper-setters.index', compact('paperSetters'));
+    }
+
+    // ✅ Search & Filter Questions (To build exams)
+    public function searchQuestions(Request $request)
+    {
+        return view('moderator.search-questions');
+    }
+
+    // ✅ Display the list of moderators (For Admin Panel)
     public function index()
     {
         $moderators = User::role('moderator')->get();
@@ -40,13 +54,18 @@ class ModeratorController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
+            'phone' => 'required|string|max:15',
+            'district' => 'required|string',
             'password' => 'required|min:6|confirmed',
         ]);
 
         $moderator = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
+            'district' => $request->district,
             'password' => Hash::make($request->password),
+            'role' => 'moderator',
         ]);
 
         $moderator->assignRole('moderator');

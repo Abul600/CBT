@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="bg-blue-500 p-4 rounded-md">
             <h2 class="font-semibold text-xl text-white leading-tight">
-                {{ __('Create New User') }}  {{-- Updated title for clarity --}}
+                {{ __('Create New User') }}
             </h2>
         </div>
     </x-slot>
@@ -32,6 +32,34 @@
                                class="form-input-style" 
                                placeholder="Enter Email" required>
                         @error('email')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <!-- Phone Number Field -->
+                    <div class="mt-4">
+                        <label class="text-black font-semibold">Phone Number</label>
+                        <input type="text" name="phone" value="{{ old('phone') }}" 
+                               class="form-input-style" 
+                               placeholder="Enter Phone Number" required>
+                        @error('phone')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <!-- District Dropdown -->
+                    <div class="mt-4">
+                        <label class="text-black font-semibold">District</label>
+                        <select name="district" class="form-input-style" required>
+                            <option value="" disabled selected>Select District</option>
+                            <option value="Jorhat">Jorhat</option>
+                            <option value="Golaghat">Golaghat</option>
+                            <option value="Lakhimpur">Lakhimpur</option>
+                            <option value="Dibrugarh">Dibrugarh</option>
+                            <option value="Dhemaji">Dhemaji</option>
+                            <option value="Sivasagar">Sivasagar</option>
+                        </select>
+                        @error('district')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>
@@ -73,7 +101,7 @@
 
                     <div class="mt-4">
                         <button type="submit" class="btn-primary">
-                            Create User  {{-- Updated button text --}}
+                            Create User
                         </button>
                     </div>
                 </form>

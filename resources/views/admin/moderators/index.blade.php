@@ -9,7 +9,7 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                <a href="{{ route('admin.moderators.create') }}" class="px-4 py-2 bg-blue-500 text-white rounded">Add Moderator</a>
+                <a href="{{ route('admin.moderators.create') }}" class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded">Add Moderator</a>
 
                 @if(session('success'))
                     <div class="mt-3 p-3 bg-green-200 text-green-700 rounded">
