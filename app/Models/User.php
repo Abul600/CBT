@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles; // ✅ Import Spatie's HasRoles
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -17,7 +17,7 @@ class User extends Authenticatable
         HasProfilePhoto, 
         Notifiable, 
         TwoFactorAuthenticatable, 
-        HasRoles; // ✅ Ensure HasRoles is included
+        HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -28,11 +28,7 @@ class User extends Authenticatable
         'phone',
         'district',
         'password',
-<<<<<<< HEAD
-        'role_id', // ✅ Store the role ID for Spatie's permission system
-=======
-        'role',
->>>>>>> ab83f84 (minor changes)
+        'role', // ✅ Ensure 'role' is fillable
     ];
 
     /**
@@ -46,39 +42,53 @@ class User extends Authenticatable
     ];
 
     /**
-     * The accessors to append to the model's array form.
+     * The attributes that should be cast.
      */
-    protected $appends = [
-        'profile_photo_url',
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
     /**
-     * Define relationship with Role model (if needed)
+     * Automatically update role column when assigning roles.
      */
-    public function role()
+    protected static function boot()
     {
-        return $this->belongsTo(\Spatie\Permission\Models\Role::class, 'role_id');
+        parent::boot();
+
+        static::saved(function ($user) {
+            $user->syncRoleColumn();
+        });
+
+        static::created(function ($user) {
+            $user->syncRoleColumn();
+        });
     }
 
     /**
-     * Redirect user based on their role.
+     * Synchronize the 'role' column with the assigned roles.
+     */
+    public function syncRoleColumn()
+    {
+        $roleName = $this->getRoleNames()->first();
+
+        // ✅ Update only if the role has changed
+        if ($roleName && $this->role !== $roleName) {
+            $this->updateQuietly(['role' => $roleName]);
+        }
+    }
+
+    /**
+     * Redirect user based on their role after login.
      */
     public function redirectToRoleDashboard()
     {
-        return match($this->getRoleNames()->first()) { // ✅ Uses Spatie's role system
+        return match ($this->getRoleNames()->first()) {
             'admin'        => redirect()->route('admin.dashboard'),
             'moderator'    => redirect()->route('moderator.dashboard'),
-            'paper_setter' => redirect()->route('paper_setter.dashboard'),
+            'paper setter' => redirect()->route('paper-setter.dashboard'),
             'student'      => redirect()->route('student.dashboard'),
-            default        => redirect('/dashboard'),
+            default        => redirect()->route('dashboard'),
         };
     }
 }

@@ -12,8 +12,8 @@ class ModeratorController extends Controller
 {
     public function __construct()
     {
-        // ✅ Ensures only authenticated users with 'Moderator' role can access this controller
-        $this->middleware(['auth', 'role:Moderator']);
+        // ✅ Ensures only authenticated users with 'moderator' role can access this controller
+        $this->middleware(['auth', 'role:moderator']);
     }
 
     // ✅ Moderator Dashboard
@@ -48,29 +48,36 @@ class ModeratorController extends Controller
         return view('admin.moderators.create');
     }
 
-    // ✅ Store a newly created moderator in the database
+    // ✅ Store a newly created user (Moderator or Student)
     public function store(Request $request)
     {
+        // ✅ Validate input, ensuring role is either 'moderator' or 'student'
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:15',
             'district' => 'required|string',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|confirmed|min:6',
+            'role' => 'required|in:moderator,student', // Ensures only valid roles are assigned
         ]);
 
-        $moderator = User::create([
+        // ✅ Create the user
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'district' => $request->district,
             'password' => Hash::make($request->password),
-            'role' => 'moderator',
         ]);
 
-        $moderator->assignRole('moderator');
+        // ✅ Assign role dynamically (Moderator or Student)
+        if ($role = Role::where('name', $request->role)->first()) {
+            $user->assignRole($role);
+        } else {
+            return redirect()->back()->with('error', 'The selected role does not exist!');
+        }
 
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator created successfully.');
+        return redirect()->route('admin.moderators.index')->with('success', ucfirst($request->role) . ' added successfully');
     }
 
     // ✅ Show the form for editing a moderator

@@ -20,12 +20,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('admin.exams.index') }}" 
-                           class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center">
-                            📝 Manage Exams
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ route('admin.users.index') }}" 
                            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded flex items-center">
                             👥 Manage Users

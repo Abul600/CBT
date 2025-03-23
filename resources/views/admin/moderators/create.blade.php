@@ -83,16 +83,17 @@
                                placeholder="Confirm Password" required>
                     </div>
 
-                    <!-- Role Selection -->
+                    <!-- Role Selection (Only Moderator & Student) -->
                     <div class="mt-4">
                         <label for="role" class="text-black font-semibold">User Role</label>
                         <select id="role" name="role" class="form-input-style" required>
                             <option value="">-- Select Role --</option>
-                            @foreach(['admin', 'moderator', 'paper_seater', 'student'] as $role)
-                                <option value="{{ $role }}" {{ old('role') == $role ? 'selected' : '' }}>
-                                    {{ ucfirst(str_replace('_', ' ', $role)) }}
-                                </option>
-                            @endforeach
+                            <option value="moderator" {{ old('role') == 'moderator' ? 'selected' : '' }}>
+                                Moderator
+                            </option>
+                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>
+                                Student
+                            </option>
                         </select>
                         @error('role')
                             <span class="error-message">{{ $message }}</span>

@@ -17,11 +17,11 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             
-            // ✅ Explicitly reference 'roles' table
-            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('cascade');
+            // ❌ REMOVE role_id (Spatie does not use this)
+            // $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('cascade');
 
-            // Keep 'role' as a string column if needed for backward compatibility
-            $table->string('role')->default('student');
+            // ✅ Keep 'role' as a string for reference
+            $table->string('role')->default('student'); 
 
             $table->rememberToken();
             $table->string('profile_photo_path', 2048)->nullable();

@@ -39,23 +39,15 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-<<<<<<< HEAD
-        // ✅ Custom Authentication Logic
+        // ✅ Custom Authentication Logic (Fixed)
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
-=======
-        RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
->>>>>>> ab83f84 (minor changes)
 
             if ($user && Hash::check($request->password, $user->password)) {
-                if (!$user->is_active) {  // Ensure user is active
-                    return null;  // Reject login
-                }
-                return $user;
+                return $user; // ✅ FIXED: Removed "is_active" check
             }
 
-            return null;
+            return null; // Prevents login
         });
 
         // ✅ Rate Limiting
@@ -68,19 +60,16 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-<<<<<<< HEAD
-        // ✅ Authentication Views (Dynamically Loading)
+        // ✅ Authentication Views
         Fortify::loginView(fn () => view('auth.login'));
         Fortify::registerView(fn () => view('auth.register'));
-=======
-        // Custom authentication pipeline
+
+        // ✅ Custom Authentication Pipeline
         Fortify::authenticateThrough(function () {
             return [
                 \Laravel\Fortify\Actions\EnsureLoginIsNotThrottled::class,
                 \Laravel\Fortify\Actions\AttemptToAuthenticate::class,
-                \App\Actions\Fortify\RedirectBasedOnRole::class, // Custom redirect logic
             ];
         });
->>>>>>> ab83f84 (minor changes)
     }
 }

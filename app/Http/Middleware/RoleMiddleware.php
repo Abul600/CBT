@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware {
     public function handle(Request $request, Closure $next, $role) {
-        // ✅ Redirect to login if the user is not authenticated
+        // ✅ Ensure user is logged in
         if (!Auth::check()) {
             return redirect('/login')->with('error', 'You must be logged in to access this page.');
         }
 
-        // ✅ Use Spatie's hasRole() to check permissions
+        // ✅ Check if user has the required role
         if (!Auth::user()->hasRole($role)) {
             abort(403, 'Unauthorized access'); // Prevents infinite redirect loops
         }

@@ -23,6 +23,23 @@
         <div class="min-h-screen bg-gray-100">
             @livewire('navigation-menu')
 
+            <!-- Role-Based Layout -->
+            @if(auth()->check())
+                @if(auth()->user()->hasRole('admin'))
+                    @include('layouts.admin')
+                @elseif(auth()->user()->hasRole('moderator'))
+                    @include('layouts.moderator')
+                @elseif(auth()->user()->hasRole('paper setter'))
+                    @include('layouts.paper-setter')
+                @elseif(auth()->user()->hasRole('student'))
+                    @include('layouts.student')
+                @else
+                    @include('layouts.default')
+                @endif
+            @else
+                @include('layouts.default')
+            @endif
+
             <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-white shadow">
