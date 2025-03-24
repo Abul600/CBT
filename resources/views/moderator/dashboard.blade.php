@@ -13,15 +13,12 @@
                 <p class="mb-4">Here you can manage exams and paper setters.</p>
 
                 <ul class="space-y-3">
-                    <!-- Manage Exams Button -->
                     <li>
                         <a href="{{ route('moderator.exams.index') }}" 
                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center">
                             📝 Manage Exams
                         </a>
                     </li>
-
-                    <!-- Manage Paper Setters Button -->
                     <li>
                         <a href="{{ route('moderator.paper_setters.index') }}" 
                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center">

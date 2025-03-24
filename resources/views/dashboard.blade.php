@@ -1,6 +1,5 @@
 @php
     use Spatie\Permission\Models\Role;
-
     $user = auth()->user();
 @endphp
 
@@ -11,8 +10,8 @@
     @include('moderator.dashboard')
 @elseif($user->hasRole('student'))
     @include('student.dashboard')
-@elseif($user->hasRole('paper_seater'))
-    @include('paper_seater.dashboard')
+@elseif($user->hasRole('paper_setter')) {{-- ✅ FIXED: Corrected role name --}}
+    @include('paper_setter.dashboard')
 @else
     {{-- Default fallback for unassigned roles --}}
     <x-app-layout>

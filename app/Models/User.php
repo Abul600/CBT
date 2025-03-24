@@ -84,11 +84,11 @@ class User extends Authenticatable
     public function redirectToRoleDashboard()
     {
         return match ($this->getRoleNames()->first()) {
-            'admin'        => redirect()->route('admin.dashboard'),
-            'moderator'    => redirect()->route('moderator.dashboard'),
-            'paper setter' => redirect()->route('paper-setter.dashboard'),
-            'student'      => redirect()->route('student.dashboard'),
-            default        => redirect()->route('dashboard'),
+            'admin'        => route('admin.dashboard'),
+            'moderator'    => route('moderator.dashboard'),
+            'paper_setter' => route('paper_setter.dashboard'), // ✅ Fixed role name
+            'student'      => route('student.dashboard'),
+            default        => route('dashboard'),
         };
     }
 }

@@ -25,8 +25,47 @@ class ModeratorController extends Controller
     // ✅ View Paper Setters
     public function paperSetters()
     {
-        $paperSetters = User::role('paper_seater')->get();
-        return view('moderator.paper-setters.index', compact('paperSetters'));
+        $paperSetters = User::role('paper_setter')->get(); // ✅ Fixed role name
+        return view('moderator.paper_setters.index', compact('paperSetters'));
+    }
+
+    // ✅ Show form to create a new Paper Setter (NEWLY ADDED)
+    public function createPaperSetter()
+    {
+        return view('moderator.paper_setters.create');
+    }
+
+    // ✅ Store new Paper Setter (NEWLY ADDED)
+    public function storePaperSetter(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|max:15',
+            'district' => 'required|string',
+            'password' => 'required|confirmed|min:6',
+        ]);
+
+        // ✅ Create Paper Setter
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'district' => $request->district,
+            'password' => Hash::make($request->password),
+        ]);
+
+        // ✅ Assign the 'paper_setter' role
+        $user->assignRole('paper_setter');
+
+        return redirect()->route('moderator.paper_setters.index')->with('success', 'Paper Setter added successfully.');
+    }
+
+    // ✅ Delete a Paper Setter (NEWLY ADDED)
+    public function destroyPaperSetter(User $paperSetter)
+    {
+        $paperSetter->delete();
+        return redirect()->route('moderator.paper_setters.index')->with('success', 'Paper Setter deleted successfully.');
     }
 
     // ✅ Search & Filter Questions (To build exams)
@@ -48,17 +87,16 @@ class ModeratorController extends Controller
         return view('admin.moderators.create');
     }
 
-    // ✅ Store a newly created user (Moderator or Student)
+    // ✅ Store a newly created user (Moderator, Student, or Paper Setter)
     public function store(Request $request)
     {
-        // ✅ Validate input, ensuring role is either 'moderator' or 'student'
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:15',
             'district' => 'required|string',
             'password' => 'required|confirmed|min:6',
-            'role' => 'required|in:moderator,student', // Ensures only valid roles are assigned
+            'role' => 'required|in:moderator,student,paper_setter', // ✅ Added paper_setter role
         ]);
 
         // ✅ Create the user
@@ -70,7 +108,7 @@ class ModeratorController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // ✅ Assign role dynamically (Moderator or Student)
+        // ✅ Assign role dynamically
         if ($role = Role::where('name', $request->role)->first()) {
             $user->assignRole($role);
         } else {

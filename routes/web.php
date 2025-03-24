@@ -16,14 +16,14 @@ Route::get('/', function () {
 // ✅ Authenticated User Dashboard (Redirect Based on Role)
 Route::middleware(['auth', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/dashboard', function () {
-        return redirect(auth()->user()->redirectToRoleDashboard());
+        return auth()->user()->redirectToRoleDashboard();
     })->name('dashboard');
 });
 
 /*
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Admin Routes (Only Accessible by Admins)
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -47,15 +47,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 /*
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Moderator Routes (Only Accessible by Moderators)
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('moderator.')->group(function () {
     Route::get('/dashboard', [ModeratorController::class, 'dashboard'])->name('dashboard');
 
     // ✅ Paper Setter Management
-    Route::prefix('paper-setters')->name('paper_setters.')->group(function () {
+    Route::prefix('paper_setters')->name('paper_setters.')->group(function () {
         Route::get('/', [ModeratorController::class, 'paperSetters'])->name('index');
         Route::get('/create', [ModeratorController::class, 'createPaperSetter'])->name('create');
         Route::post('/', [ModeratorController::class, 'storePaperSetter'])->name('store');
@@ -83,18 +83,34 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
 });
 
 /*
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Paper Setter Routes (Only Accessible by Paper Setters)
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:paper_setter'])->prefix('paper-setter')->name('paper-setter.')->group(function () {
+Route::middleware(['auth', 'role:paper_setter'])->prefix('paper_setter')->name('paper_setter.')->group(function () {
     Route::get('/dashboard', [PaperSetterController::class, 'dashboard'])->name('dashboard');
+
+    // ✅ Question Management for Paper Setters
+    Route::prefix('questions')->name('questions.')->group(function () {
+        Route::get('/', [PaperSetterController::class, 'questionIndex'])->name('index');
+        Route::get('/create', [PaperSetterController::class, 'createQuestion'])->name('create');
+        Route::post('/', [PaperSetterController::class, 'storeQuestion'])->name('store');
+        Route::delete('/{question}', [PaperSetterController::class, 'destroyQuestion'])->name('destroy');
+    });
+
+    // ✅ Exam Management for Paper Setters
+    Route::prefix('exams')->name('exams.')->group(function () {
+        Route::get('/', [PaperSetterController::class, 'examIndex'])->name('index');
+        Route::get('/create', [PaperSetterController::class, 'createExam'])->name('create');
+        Route::post('/', [PaperSetterController::class, 'storeExam'])->name('store');
+        Route::delete('/{exam}', [PaperSetterController::class, 'destroyExam'])->name('destroy');
+    });
 });
 
 /*
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | Student Routes (Only Accessible by Students)
-|-------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
