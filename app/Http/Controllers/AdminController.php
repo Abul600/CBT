@@ -26,7 +26,7 @@ class AdminController extends Controller
     public function moderators()
     {
         $moderators = User::where('role', 'moderator')->get();
-        return view('admin.moderators.index', compact('moderators'));
+        return view('admin.moderators.index', compact('moderators')); 
     }
 
     // Show the form for creating a new moderator
@@ -38,9 +38,12 @@ class AdminController extends Controller
     // Store a newly created moderator
     public function storeModerator(Request $request)
     {
+        dd($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|max:15',
+            'district' => 'required|string',
             'password' => 'required|min:6',
         ]);
 
@@ -51,6 +54,8 @@ class AdminController extends Controller
         User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
+            'district' => $request->district,
             'password' => Hash::make($request->password),
             'role' => 'moderator', // Ensure correct role assignment
         ]);
@@ -72,7 +77,7 @@ class AdminController extends Controller
             'email' => 'required|email|unique:users,email,' . $moderator->id,
         ]);
 
-        if ($validator->fails()) {
+        if ($validator->fails()) { 
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
@@ -90,4 +95,4 @@ class AdminController extends Controller
         $moderator->delete();
         return redirect()->route('admin.moderators.index')->with('success', 'Moderator deleted successfully');
     }
-}
+}        

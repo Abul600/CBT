@@ -30,17 +30,22 @@ class ModeratorController extends Controller
 
     // Store a newly created moderator in the database
     public function store(Request $request)
-    {
+    { 
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
+            'phone' => 'required|string|max:15',
+            'district' => 'required|string',
             'password' => 'required|min:6|confirmed',
         ]);
 
         $moderator = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
+            'district' => $request->district,
             'password' => Hash::make($request->password),
+            'role' => 'moderator',
         ]);
 
         $moderator->assignRole('moderator');

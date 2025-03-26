@@ -83,4 +83,4 @@ Route::middleware(['auth:sanctum', 'role:moderator'])->prefix('moderator')->grou
 */
 Route::middleware(['auth:sanctum', 'role:paper_seater'])->prefix('paper-seater')->group(function () {
     Route::get('/dashboard', [PaperSeaterController::class, 'dashboard'])->name('paper_seater.dashboard');
-});
+});       

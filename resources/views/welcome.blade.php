@@ -28,7 +28,16 @@
             color: white;
             text-shadow: 2px 2px 5px rgba(244, 11, 11, 0.94);
             margin-bottom: 20px;
+            
         }
+        h2 {
+            font-size: 30px;
+            color: white;
+            text-shadow: 2px 2px 10px rgba(244, 11, 11, 0.94);
+            margin-bottom: 30px;
+            
+        }
+
         .btn {
             display: inline-block;
             padding: 12px 24px;
