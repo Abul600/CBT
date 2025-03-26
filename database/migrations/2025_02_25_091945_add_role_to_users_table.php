@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'role')) {
-                $table->string('role')->default('student')->after('password');
-            } else {
+            // ✅ Check if 'role_id' column does not exist before adding
+            if (!Schema::hasColumn('users', 'role_id')) {
+                $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('cascade')->after('password');
+            }
+
+            // ✅ Check if 'role' column exists and modify it to be NOT NULL with default
+            if (Schema::hasColumn('users', 'role')) {
                 $table->string('role')->default('student')->nullable(false)->change();
             }
         });
@@ -26,6 +30,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            // ✅ Drop 'role_id' only if it exists
+            if (Schema::hasColumn('users', 'role_id')) {
+                $table->dropForeign(['role_id']);
+                $table->dropColumn('role_id');
+            }
+
+            // ✅ Drop 'role' column if needed
             if (Schema::hasColumn('users', 'role')) {
                 $table->dropColumn('role');
             }

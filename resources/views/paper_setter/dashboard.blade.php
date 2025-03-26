@@ -14,13 +14,13 @@
 
                 <ul class="space-y-3">
                     <li>
-                        <a href="{{ route('paper_seater.questions.index') }}" 
+                        <a href="{{ route('paper_setter.questions.index') }}" 
                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded inline-block">
                             📝 Manage Questions
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('paper_seater.exams.index') }}" 
+                        <a href="{{ route('paper_setter.exams.index') }}" 
                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded inline-block">
                             📜 Manage Exam Papers
                         </a>

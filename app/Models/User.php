@@ -12,12 +12,15 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasProfilePhoto, Notifiable, TwoFactorAuthenticatable, HasRoles;
+    use HasApiTokens, 
+        HasFactory, 
+        HasProfilePhoto, 
+        Notifiable, 
+        TwoFactorAuthenticatable, 
+        HasRoles;
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -25,13 +28,11 @@ class User extends Authenticatable
         'phone',
         'district',
         'password',
-        'role',
+        'role', // Ensure 'role' is fillable
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -41,18 +42,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
-     */
-    protected $appends = [
-        'profile_photo_url',
-    ];
-
-    /**
      * The attributes that should be cast.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -60,16 +50,45 @@ class User extends Authenticatable
     ];
 
     /**
-     * Assign a role to the user on creation.
+     * Automatically update role column when assigning roles.
      */
     protected static function boot()
     {
         parent::boot();
 
-        static::created(function ($user) {
-            if (!$user->hasAnyRole(['admin', 'moderator', 'paper_seater', 'student'])) {
-                $user->assignRole('student'); // Default role
-            }
+        static::saved(function ($user) {
+            $user->syncRoleColumn();
         });
+
+        static::created(function ($user) {
+            $user->syncRoleColumn();
+        });
+    }
+
+    /**
+     * Synchronize the 'role' column with the assigned roles.
+     */
+    public function syncRoleColumn()
+    {
+        $roleName = $this->getRoleNames()->first();
+
+        // Update only if the role has changed
+        if ($roleName && $this->role !== $roleName) {
+            $this->updateQuietly(['role' => $roleName]);
+        }
+    }
+
+    /**
+     * Redirect user based on their role after login.
+     */
+    public function redirectToRoleDashboard()
+    {
+        return match ($this->getRoleNames()->first()) {
+            'admin'        => route('admin.dashboard'),
+            'moderator'    => route('moderator.dashboard'),
+            'paper_setter' => route('paper_setter.dashboard'), 
+            'student'      => route('student.dashboard'),
+            default        => route('dashboard'),
+        };
     }
 }

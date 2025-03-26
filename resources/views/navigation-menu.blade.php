@@ -14,7 +14,7 @@
                  <!-- Navigation Links -->
 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex items-center">
     <a href="{{ route('dashboard') }}">
-        <img src="{{ asset('images/1001.jpeg') }}" alt="Logo" class="h-14 w-30">
+        <img src="{{ asset('images/') }}" alt="Logo" class="h-14 w-30">
     </a>
     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
         {{ __('Dashboard') }}
