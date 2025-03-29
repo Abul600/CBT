@@ -32,7 +32,7 @@ class RolePermissionSeeder extends Seeder
         // Assign permissions to roles
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $moderator = Role::firstOrCreate(['name' => 'moderator']);
-        $paper_seater = Role::firstOrCreate(['name' => 'paper_seater']);
+        $paper_setter = Role::firstOrCreate(['name' => 'paper_setter']); // Fixed role name
         $student = Role::firstOrCreate(['name' => 'student']);
 
         // Assign all permissions to Admin
@@ -42,7 +42,7 @@ class RolePermissionSeeder extends Seeder
         $moderator->givePermissionTo(['create exams', 'view exams', 'edit exams', 'delete exams']);
 
         // Assign relevant permissions to Paper Setter
-        $paper_seater->givePermissionTo(['create exams', 'view exams']);
+        $paper_setter->givePermissionTo(['create exams', 'view exams']); // Fixed role name
 
         // Assign relevant permissions to Student
         $student->givePermissionTo(['take exams', 'view results']);

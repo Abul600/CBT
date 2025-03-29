@@ -24,7 +24,7 @@
                     </div>
                     <div class="mt-4">
                         <label class="block font-medium text-sm text-gray-700">District</label>
-                        <input type="text" name="district" required class="border-gray-300 rounded w-full">
+                        <input type="text" name="district" value="{{ auth()->user()->district }}" readonly class="border-gray-300 rounded w-full bg-gray-100 cursor-not-allowed">
                     </div>
                     <div class="mt-4">
                         <label class="block font-medium text-sm text-gray-700">Password</label>

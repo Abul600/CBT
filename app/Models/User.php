@@ -28,7 +28,8 @@ class User extends Authenticatable
         'phone',
         'district',
         'password',
-        'role', // ✅ Ensure 'role' is fillable
+        'role', // Ensuring 'role' is fillable
+        'is_active', // ✅ Added is_active field
     ];
 
     /**
@@ -47,6 +48,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean', // ✅ Ensure it's treated as a boolean
     ];
 
     /**
@@ -72,7 +74,6 @@ class User extends Authenticatable
     {
         $roleName = $this->getRoleNames()->first();
 
-        // ✅ Update only if the role has changed
         if ($roleName && $this->role !== $roleName) {
             $this->updateQuietly(['role' => $roleName]);
         }
@@ -86,9 +87,17 @@ class User extends Authenticatable
         return match ($this->getRoleNames()->first()) {
             'admin'        => route('admin.dashboard'),
             'moderator'    => route('moderator.dashboard'),
-            'paper_setter' => route('paper_setter.dashboard'), // ✅ Fixed role name
+            'paper_setter' => route('paper_setter.dashboard'),
             'student'      => route('student.dashboard'),
             default        => route('dashboard'),
         };
+    }
+
+    /**
+     * Scope to get only active users.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

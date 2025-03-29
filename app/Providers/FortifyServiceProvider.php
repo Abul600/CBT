@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\LoginResponse as CustomLoginResponse;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -15,7 +16,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Fortify;
-use App\Http\Responses\LoginResponse as CustomLoginResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -24,7 +24,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // ✅ Register Custom Login Response
+        // ✅ Register Custom Login Response (Corrected)
         $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
     }
 
@@ -39,15 +39,18 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        // ✅ Custom Authentication Logic (Fixed)
+        // ✅ Custom Authentication Logic with Active Check
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
 
             if ($user && Hash::check($request->password, $user->password)) {
-                return $user; // ✅ FIXED: Removed "is_active" check
+                if (!$user->is_active) {
+                    return null; // Block login if user is inactive
+                }
+                return $user;
             }
 
-            return null; // Prevents login
+            return null; // Prevent login
         });
 
         // ✅ Rate Limiting

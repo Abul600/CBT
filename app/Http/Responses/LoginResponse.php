@@ -13,18 +13,31 @@ class LoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
-        // ✅ Debugging: Log user role during login
-        Log::info('User Logging In:', ['roles' => $user->getRoleNames()]);
-
-        // ✅ Prevents redirect loops by using redirect()->intended()
-        if ($user->hasRole('Admin')) {
-            return redirect()->intended('/admin/dashboard');
-        } elseif ($user->hasRole('Moderator')) {
-            return redirect()->intended('/moderator/dashboard');
-        } elseif ($user->hasRole('Student')) {
-            return redirect()->intended('/student/dashboard');
-        } else {
-            return redirect()->intended('/dashboard'); // ✅ Default redirect for unknown roles
+        // ✅ Check if the user is active before allowing login
+        if (!$user || !$user->is_active) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account is deactivated.',
+            ]);
         }
+
+        // ✅ Debugging: Log user role during login
+        Log::info('User Logging In:', ['user_id' => $user->id, 'roles' => $user->getRoleNames()]);
+
+        // ✅ Redirect based on role
+        return redirect()->intended($this->redirectToRoleDashboard($user));
+    }
+
+    /**
+     * Determine the redirect path based on user role.
+     */
+    protected function redirectToRoleDashboard($user)
+    {
+        return match ($user->getRoleNames()->first() ?? 'default') {
+            'Admin'     => '/admin/dashboard',
+            'Moderator' => '/moderator/dashboard',
+            'Student'   => '/student/dashboard',
+            default     => '/dashboard',
+        };
     }
 }
