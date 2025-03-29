@@ -14,7 +14,7 @@
                 <!-- Add Moderator Button -->
                 <a href="{{ route('admin.moderators.create') }}" 
                    class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded">
-                    Add Moderator
+                   ➕ {{ __('Add Moderator') }}
                 </a>
 
                 <!-- Success Message -->
@@ -30,7 +30,7 @@
                         <tr class="bg-gray-200">
                             <th class="px-4 py-2 border">Name</th>
                             <th class="px-4 py-2 border">Email</th>
-                            <th class="px-4 py-2 border">Role</th>
+                            <th class="px-4 py-2 border">Phone No</th>
                             <th class="px-4 py-2 border">Actions</th>
                         </tr>
                     </thead>
@@ -39,7 +39,8 @@
                             <tr class="hover:bg-gray-100">
                                 <td class="border px-4 py-2">{{ $moderator->name }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->email }}</td>
-                                <td class="border px-4 py-2">{{ $moderator->getRoleNames()->first() }}</td>  <!-- Fetch the role correctly -->
+                                <td class="border px-4 py-2">{{ $moderator->phone }}</td>
+
                                 <td class="border px-4 py-2 flex space-x-2">
                                     
                                     <!-- Edit Button -->
