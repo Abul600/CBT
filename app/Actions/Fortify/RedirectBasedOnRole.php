@@ -16,8 +16,8 @@ class RedirectBasedOnRole
             return redirect()->intended('/admin/dashboard');
         } elseif ($user->hasRole('moderator')) {
             return redirect()->intended('/moderator/dashboard');
-        } elseif ($user->hasRole('paper_seater')) {
-            return redirect()->intended('/paper-seater/dashboard');
+        } elseif ($user->hasRole('paper_setter')) { // Fixed role name
+            return redirect()->intended('/paper-setter/dashboard');
         } else {
             return redirect()->intended('/student/dashboard');
         }

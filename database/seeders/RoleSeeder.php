@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 class RoleSeeder extends Seeder {
     public function run(): void {
-        $roles = ['Admin', 'Moderator', 'Paper Seater', 'Student'];
+        $roles = ['Admin', 'Moderator', 'Paper Setter', 'Student'];
 
         // Disable foreign key checks (useful for resetting)
         Schema::disableForeignKeyConstraints();

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('paper_seaters', function (Blueprint $table) {
+        Schema::create('paper_setters', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Paper Setter User ID
             $table->unsignedBigInteger('moderator_id'); // Assigned by Moderator
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('paper_seaters');
+        Schema::dropIfExists('paper_setters');
     }
 };

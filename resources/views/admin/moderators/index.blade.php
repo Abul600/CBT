@@ -31,6 +31,7 @@
                             <th class="px-4 py-2 border">Name</th>
                             <th class="px-4 py-2 border">Email</th>
                             <th class="px-4 py-2 border">Phone No</th>
+                            <th class="px-4 py-2 border">Role</th>
                             <th class="px-4 py-2 border">Actions</th>
                         </tr>
                     </thead>
@@ -40,7 +41,7 @@
                                 <td class="border px-4 py-2">{{ $moderator->name }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->email }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->phone }}</td>
-
+                                <td class="border px-4 py-2">{{ $moderator->getRoleNames()->first() ?? 'N/A' }}</td>
                                 <td class="border px-4 py-2 flex space-x-2">
                                     
                                     <!-- Edit Button -->
@@ -49,24 +50,23 @@
                                         Edit
                                     </a>
                                     
-                                    <!-- Delete Form -->
-                                    <form action="{{ route('admin.moderators.destroy', $moderator->id) }}" 
-                                          method="POST" 
-                                          onsubmit="return confirm('Are you sure you want to delete this moderator?');"
-                                          class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                                class="px-4 py-2 bg-red-500 text-white rounded">
-                                            Delete
-                                        </button>
-                                    </form>
-
+                                    <!-- Activate/Deactivate Button -->
+                                    @if($moderator->is_active)
+                                        <a href="{{ route('moderator.deactivate', $moderator->id) }}" 
+                                           class="px-4 py-2 bg-red-500 text-white rounded">
+                                            Deactivate
+                                        </a>
+                                    @else
+                                        <a href="{{ route('moderator.activate', $moderator->id) }}" 
+                                           class="px-4 py-2 bg-green-500 text-white rounded">
+                                            Activate
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center p-4">No moderators found.</td>
+                                <td colspan="5" class="text-center p-4">No moderators found.</td>
                             </tr>
                         @endforelse
                     </tbody>

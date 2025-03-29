@@ -13,7 +13,8 @@ class ModeratorController extends Controller
     public function __construct()
     {
         // ✅ Ensures only authenticated users with 'moderator' role can access this controller
-        $this->middleware(['auth', 'role:moderator']);
+        $this->middleware(['auth', 'role:moderator'])->except(['activate', 'deactivate']);
+        $this->middleware(['auth', 'role:admin'])->only(['activate', 'deactivate']);
     }
 
     // ✅ Moderator Dashboard
@@ -25,17 +26,17 @@ class ModeratorController extends Controller
     // ✅ View Paper Setters
     public function paperSetters()
     {
-        $paperSetters = User::role('paper_setter')->get(); // ✅ Fixed role name
+        $paperSetters = User::role('paper_setter')->get();
         return view('moderator.paper_setters.index', compact('paperSetters'));
     }
 
-    // ✅ Show form to create a new Paper Setter (NEWLY ADDED)
+    // ✅ Show form to create a new Paper Setter
     public function createPaperSetter()
     {
         return view('moderator.paper_setters.create');
     }
 
-    // ✅ Store new Paper Setter (NEWLY ADDED)
+    // ✅ Store new Paper Setter
     public function storePaperSetter(Request $request)
     {
         $request->validate([
@@ -46,29 +47,28 @@ class ModeratorController extends Controller
             'password' => 'required|confirmed|min:6',
         ]);
 
-        // ✅ Create Paper Setter
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'district' => $request->district,
             'password' => Hash::make($request->password),
+            'is_active' => 1, // Paper Setters are active by default
         ]);
 
-        // ✅ Assign the 'paper_setter' role
         $user->assignRole('paper_setter');
 
         return redirect()->route('moderator.paper_setters.index')->with('success', 'Paper Setter added successfully.');
     }
 
-    // ✅ Delete a Paper Setter (NEWLY ADDED)
+    // ✅ Delete a Paper Setter
     public function destroyPaperSetter(User $paperSetter)
     {
         $paperSetter->delete();
         return redirect()->route('moderator.paper_setters.index')->with('success', 'Paper Setter deleted successfully.');
     }
 
-    // ✅ Search & Filter Questions (To build exams)
+    // ✅ Search & Filter Questions
     public function searchQuestions(Request $request)
     {
         return view('moderator.search-questions');
@@ -96,19 +96,18 @@ class ModeratorController extends Controller
             'phone' => 'required|string|max:15',
             'district' => 'required|string',
             'password' => 'required|confirmed|min:6',
-            'role' => 'required|in:moderator,student,paper_setter', // ✅ Added paper_setter role
+            'role' => 'required|in:moderator,student,paper_setter',
         ]);
 
-        // ✅ Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'district' => $request->district,
             'password' => Hash::make($request->password),
+            'is_active' => 1, // New users are active by default
         ]);
 
-        // ✅ Assign role dynamically
         if ($role = Role::where('name', $request->role)->first()) {
             $user->assignRole($role);
         } else {
@@ -124,7 +123,7 @@ class ModeratorController extends Controller
         return view('admin.moderators.edit', compact('moderator'));
     }
 
-    // ✅ Update the moderator's details in the database
+    // ✅ Update the moderator's details
     public function update(Request $request, User $moderator)
     {
         $request->validate([
@@ -145,5 +144,31 @@ class ModeratorController extends Controller
     {
         $moderator->delete();
         return redirect()->route('admin.moderators.index')->with('success', 'Moderator deleted successfully.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Moderator Activation & Deactivation (For Admin)
+    |--------------------------------------------------------------------------
+    */
+
+    // ✅ Activate a Moderator
+    public function activate($id)
+    {
+        $moderator = User::findOrFail($id);
+        $moderator->is_active = 1;
+        $moderator->save();
+
+        return redirect()->back()->with('success', 'Moderator activated successfully.');
+    }
+
+    // ✅ Deactivate a Moderator
+    public function deactivate($id)
+    {
+        $moderator = User::findOrFail($id);
+        $moderator->is_active = 0;
+        $moderator->save();
+
+        return redirect()->back()->with('success', 'Moderator deactivated successfully.');
     }
 }

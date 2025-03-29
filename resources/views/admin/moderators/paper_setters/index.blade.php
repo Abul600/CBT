@@ -2,31 +2,31 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Paper Seaters</h2>
+    <h2 class="mb-4">Paper Setters</h2>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <a href="{{ route('moderator.paper_seaters.create') }}" class="btn btn-primary mb-3">Assign New Paper Seater</a>
+    <a href="{{ route('moderator.paper_setters.create') }}" class="btn btn-primary mb-3">Assign New Paper Setter</a>
 
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Moderator</th>
-                <th>Paper Seater</th>
+                <th>Paper Setter</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($paperSeaters as $paperSeater)
+            @forelse($paperSetters as $paperSetter)
             <tr>
-                <td>{{ $paperSeater->id }}</td>
-                <td>{{ $paperSeater->moderator->name }}</td>
-                <td>{{ $paperSeater->user->name }}</td>
+                <td>{{ $paperSetter->id }}</td>
+                <td>{{ $paperSetter->moderator->name }}</td>
+                <td>{{ $paperSetter->user->name }}</td>
                 <td>
-                    <form action="{{ route('moderator.paper_seaters.destroy', $paperSeater->id) }}" method="POST">
+                    <form action="{{ route('moderator.paper_setters.destroy', $paperSetter->id) }}" method="POST">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">
@@ -37,7 +37,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="4" class="text-center">No paper seaters assigned yet.</td>
+                <td colspan="4" class="text-center">No paper setters assigned yet.</td>
             </tr>
             @endforelse
         </tbody>

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'district',
         'password',
         'role', // Ensure 'role' is fillable
+        'is_active', // ✅ Added is_active field
     ];
 
     /**
@@ -47,6 +48,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean', // ✅ Ensure it's treated as a boolean
     ];
 
     /**
@@ -90,5 +92,13 @@ class User extends Authenticatable
             'student'      => route('student.dashboard'),
             default        => route('dashboard'),
         };
+    }
+
+    /**
+     * Scope to get only active users.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }
