@@ -10,11 +10,29 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                 <h1 class="text-2xl font-bold mb-4">Manage Paper Setters</h1>
 
+                <!-- Show flash error if limit exceeded -->
+                @if (session('error'))
+                    <div class="bg-red-100 text-red-800 p-3 mb-4 rounded">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <!-- Active Paper Setter Count -->
+                @php
+                    $activeCount = $paperSetters->where('is_active', 1)->count();
+                @endphp
+
+                <p class="mb-2 text-gray-700 font-semibold">
+                    Active Paper Setters: {{ $activeCount }} / 3
+                </p>
+
+                <!-- Always show Add button -->
                 <a href="{{ route('moderator.paper_setters.create') }}" 
-                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-                      Add Paper Setter
+                   class="{{ $activeCount >= 3 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600' }} text-white px-4 py-2 rounded inline-block">
+                    Add Paper Setter
                 </a>
 
+                <!-- Paper Setters Table -->
                 <table class="mt-4 w-full border-collapse border border-gray-300">
                     <thead>
                         <tr class="bg-gray-200">
