@@ -51,13 +51,13 @@
                     <div class="mt-4">
                         <label class="text-black font-semibold">District</label>
                         <select name="district" class="form-input-style" required>
-                            <option value="" disabled selected>Select District</option>
-                            <option value="Jorhat">Jorhat</option>
-                            <option value="Golaghat">Golaghat</option>
-                            <option value="Lakhimpur">Lakhimpur</option>
-                            <option value="Dibrugarh">Dibrugarh</option>
-                            <option value="Dhemaji">Dhemaji</option>
-                            <option value="Sivasagar">Sivasagar</option>
+                            <option value="" disabled {{ old('district') ? '' : 'selected' }}>Select District</option>
+                            <option value="Jorhat" {{ old('district') == 'Jorhat' ? 'selected' : '' }}>Jorhat</option>
+                            <option value="Golaghat" {{ old('district') == 'Golaghat' ? 'selected' : '' }}>Golaghat</option>
+                            <option value="Lakhimpur" {{ old('district') == 'Lakhimpur' ? 'selected' : '' }}>Lakhimpur</option>
+                            <option value="Dibrugarh" {{ old('district') == 'Dibrugarh' ? 'selected' : '' }}>Dibrugarh</option>
+                            <option value="Dhemaji" {{ old('district') == 'Dhemaji' ? 'selected' : '' }}>Dhemaji</option>
+                            <option value="Sivasagar" {{ old('district') == 'Sivasagar' ? 'selected' : '' }}>Sivasagar</option>
                         </select>
                         @error('district')
                             <span class="error-message">{{ $message }}</span>
@@ -100,6 +100,7 @@
                         @enderror
                     </div>
 
+                    <!-- Submit Button -->
                     <div class="mt-4">
                         <button type="submit" class="btn-primary">
                             Create User
@@ -116,11 +117,11 @@
                 @apply border rounded p-2 w-full bg-white text-black placeholder-gray-500 
                        focus:ring-2 focus:ring-yellow-400 focus:outline-none;
             }
-            
+
             .error-message {
                 @apply text-red-500 text-sm mt-1;
             }
-            
+
             .btn-primary {
                 @apply px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 
                        transition transform hover:scale-105;

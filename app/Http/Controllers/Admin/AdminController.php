@@ -16,16 +16,19 @@ class AdminController extends Controller
         $this->middleware(['auth', 'role:admin']);
     }
 
-    // Dashboard - No changes needed
+    // Admin Dashboard
     public function dashboard()
     {
         return view('admin.dashboard');
     }
 
-    // Moderator Management
+    // ===========================
+    // MODERATOR MANAGEMENT
+    // ===========================
+
     public function moderators()
     {
-        $moderators = User::role('moderator')->with('roles')->get();
+        $moderators = User::role('moderator')->with('roles')->paginate(10);
         return view('admin.moderators.index', compact('moderators'));
     }
 
@@ -44,17 +47,24 @@ class AdminController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
 
+        // Check for existing moderator in the same district
+        $existing = User::role('moderator')
+            ->where('district', $validated['district'])
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->withInput()->with('error', 'A moderator for this district already exists.');
+        }
+
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'phone'    => $validated['phone'],
             'district' => $validated['district'],
             'password' => Hash::make($validated['password']),
-            'role'     => 'moderator' // Explicit role assignment
         ]);
 
-        $moderatorRole = Role::firstOrCreate(['name' => 'moderator']);
-        $user->assignRole($moderatorRole);
+        $user->assignRole('moderator');
 
         return redirect()->route('admin.moderators.index')
             ->with('success', 'Moderator created successfully');
@@ -62,7 +72,6 @@ class AdminController extends Controller
 
     public function editModerator(User $moderator)
     {
-        // Prevent editing admins
         if ($moderator->hasRole('admin')) {
             abort(403, 'Cannot edit administrator accounts');
         }
@@ -72,7 +81,6 @@ class AdminController extends Controller
 
     public function updateModerator(Request $request, User $moderator)
     {
-        // Prevent updating admins
         if ($moderator->hasRole('admin')) {
             abort(403, 'Cannot update administrator accounts');
         }
@@ -82,21 +90,28 @@ class AdminController extends Controller
             'email'    => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
             'phone'    => 'required|string|max:15',
             'district' => 'required|string|max:255',
-            'password' => 'nullable|min:8|confirmed'
+            'password' => 'nullable|min:8|confirmed',
         ]);
 
-        $updateData = [
+        // Check for other moderator in the same district (excluding self)
+        $conflict = User::role('moderator')
+            ->where('district', $validated['district'])
+            ->where('id', '!=', $moderator->id)
+            ->first();
+
+        if ($conflict) {
+            return redirect()->back()->withInput()->with('error', 'Another moderator already exists for this district.');
+        }
+
+        $moderator->update([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'phone'    => $validated['phone'],
-            'district' => $validated['district']
-        ];
-
-        if (!empty($validated['password'])) {
-            $updateData['password'] = Hash::make($validated['password']);
-        }
-
-        $moderator->update($updateData);
+            'district' => $validated['district'],
+            'password' => $validated['password']
+                ? Hash::make($validated['password'])
+                : $moderator->password,
+        ]);
 
         return redirect()->route('admin.moderators.index')
             ->with('success', 'Moderator updated successfully');
@@ -104,17 +119,20 @@ class AdminController extends Controller
 
     public function destroyModerator(User $moderator)
     {
-        // Prevent deleting admins
         if ($moderator->hasRole('admin')) {
             abort(403, 'Cannot delete administrator accounts');
         }
 
         $moderator->delete();
+
         return redirect()->route('admin.moderators.index')
             ->with('success', 'Moderator deleted successfully');
     }
 
-    // User Management
+    // ===========================
+    // GENERAL USER MANAGEMENT
+    // ===========================
+
     public function indexUsers()
     {
         $users = User::with('roles')->paginate(10);
@@ -123,7 +141,6 @@ class AdminController extends Controller
 
     public function editUser(User $user)
     {
-        // Prevent editing current admin
         if ($user->id === auth()->id()) {
             abort(403, 'Cannot edit your own admin account');
         }
@@ -134,17 +151,15 @@ class AdminController extends Controller
 
     public function updateUserRole(Request $request, User $user)
     {
-        // Prevent self-modification
         if ($user->id === auth()->id()) {
             abort(403, 'Cannot modify your own account');
         }
 
         $validated = $request->validate([
-            'role' => 'required|exists:roles,name'
+            'role' => 'required|exists:roles,name',
         ]);
 
         $user->syncRoles([$validated['role']]);
-        $user->update(['role' => $validated['role']]);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User role updated successfully');

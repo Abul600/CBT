@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class ModeratorController extends Controller
 {
@@ -81,26 +82,33 @@ class ModeratorController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:15',
-            'district' => 'required|string',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'phone'    => 'required|string|max:15',
+            'district' => 'required|string|max:255',
             'password' => 'required|confirmed|min:6',
-            'role' => 'required|in:moderator,student,paper_setter',
         ]);
 
+        // ❌ Prevent duplicate moderator for the same district
+        $existing = User::where('district', $request->district)
+                        ->role('moderator')
+                        ->first();
+        if ($existing) {
+            return redirect()->back()->withInput()->with('error', 'A moderator already exists for this district.');
+        }
+
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'district' => $request->district,
-            'password' => Hash::make($request->password),
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'phone'     => $request->phone,
+            'district'  => $request->district,
+            'password'  => Hash::make($request->password),
             'is_active' => true,
         ]);
 
-        $user->assignRole($request->role);
+        $user->assignRole('moderator');
 
-        return redirect()->route('admin.moderators.index')->with('success', ucfirst($request->role) . ' added successfully.');
+        return redirect()->route('admin.moderators.index')->with('success', 'Moderator added successfully.');
     }
 
     public function edit(User $moderator)
@@ -111,14 +119,32 @@ class ModeratorController extends Controller
     public function update(Request $request, User $moderator)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $moderator->id,
+            'name'     => 'required|string|max:255',
+            'email'    => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
+            'phone'    => 'required|string|max:15',
+            'district' => 'required|string|max:255',
+            'password' => 'nullable|confirmed|min:6',
         ]);
 
-        $moderator->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
+        // ❌ Prevent another moderator in same district (excluding self)
+        $existing = User::where('id', '!=', $moderator->id)
+                        ->where('district', $request->district)
+                        ->role('moderator')
+                        ->first();
+        if ($existing) {
+            return redirect()->back()->withInput()->with('error', 'Another moderator is already assigned to this district.');
+        }
+
+        $moderator->name = $request->name;
+        $moderator->email = $request->email;
+        $moderator->phone = $request->phone;
+        $moderator->district = $request->district;
+
+        if ($request->password) {
+            $moderator->password = Hash::make($request->password);
+        }
+
+        $moderator->save();
 
         return redirect()->route('admin.moderators.index')->with('success', 'Moderator updated successfully.');
     }
