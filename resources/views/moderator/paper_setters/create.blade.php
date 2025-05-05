@@ -1,17 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-6 rounded-lg text-left shadow-xl">
-        <h2 class="font-extrabold text-4xl text-white tracking-wide">
-    ✍️ Add Paper Setter
-</h2>
-
+            <h2 class="font-extrabold text-4xl text-white tracking-wide">
+                ✍️ Add Paper Setter
+            </h2>
         </div>
     </x-slot>
 
     <div class="py-12 flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 to-purple-400">
-        <div class="relative w-full max-w-3xl bg-white rounded-3xl p-8 border border-gray-200 
-                    shadow-[10px_10px_40px_rgba(0,0,0,0.2)] mt-[-150px]">
-            
+        <div class="relative w-full max-w-3xl bg-white rounded-3xl p-8 border border-gray-200 shadow-[10px_10px_40px_rgba(0,0,0,0.2)] mt-[-150px]">
+
             <h3 class="text-3xl font-bold text-gray-900 text-center mb-6">
                 🌟 Enter Your Details
             </h3>
@@ -19,38 +17,57 @@
             <form action="{{ route('moderator.paper_setters.store') }}" method="POST" class="grid grid-cols-2 gap-6">
                 @csrf
 
+                <!-- Full Name Field -->
                 <div class="relative">
-                    <input type="text" name="name" required class="fun-input peer" placeholder=" ">
+                    <input type="text" name="name" value="{{ old('name') }}" required class="fun-input peer @error('name') border-red-500 @enderror" placeholder=" ">
                     <label class="fun-label">Full Name</label>
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                <!-- Email Address Field -->
                 <div class="relative">
-                    <input type="email" name="email" required class="fun-input peer" placeholder=" ">
+                    <input type="email" name="email" value="{{ old('email') }}" required class="fun-input peer @error('email') border-red-500 @enderror" placeholder=" ">
                     <label class="fun-label">Email Address</label>
+                    @error('email')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                <!-- Phone Number Field -->
                 <div class="relative">
-                    <input type="text" name="phone" required class="fun-input peer" placeholder=" ">
+                    <input type="text" name="phone" value="{{ old('phone') }}" required class="fun-input peer @error('phone') border-red-500 @enderror" placeholder=" ">
                     <label class="fun-label">Phone Number</label>
+                    @error('phone')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-               <div class="relative">
+                <!-- District Field (Readonly) -->
+                <div class="relative">
                     <label class="block font-medium text-sm text-gray-700">District</label>
                     <input type="text" name="district" value="{{ auth()->user()->district }}" readonly class="border-gray-300 rounded w-full bg-gray-100 cursor-not-allowed">
-               </div>
-
-                <div class="relative">
-                    <input type="password" name="password" required class="fun-input peer" placeholder=" ">
-                    <label class="fun-label">Password</label>
                 </div>
 
+                <!-- Password Field -->
+                <div class="relative">
+                    <input type="password" name="password" required class="fun-input peer @error('password') border-red-500 @enderror" placeholder=" ">
+                    <label class="fun-label">Password</label>
+                    @error('password')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Confirm Password Field -->
                 <div class="relative">
                     <input type="password" name="password_confirmation" required class="fun-input peer" placeholder=" ">
                     <label class="fun-label">Confirm Password</label>
                 </div>
 
+                <!-- Submit Button -->
                 <div class="col-span-2 mt-8 text-center">
-                    <button type="submit" class="fun-button"> Add Paper Setter</button>
+                    <button type="submit" class="fun-button">Add Paper Setter</button>
                 </div>
             </form>
         </div>
@@ -99,17 +116,17 @@
         }
 
         .fun-input:focus {
-            border-color:rgb(228, 99, 142);
+            border-color: rgb(228, 99, 142);
             box-shadow: 5px 5px 20px rgba(233, 30, 99, 0.3), -4px -4px 12px rgba(255, 255, 255, 0.9);
         }
-        /* Glowing effect + Zoom on hover */
-.relative.w-full.max-w-3xl:hover {
-    border-color: #ff00ff; /* Neon pink */
-    box-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);
-    transform: scale(1.05); /* Slight zoom effect */
-    transition: all 0.3s ease-in-out;
-}
 
+        /* Glowing effect + Zoom on hover */
+        .relative.w-full.max-w-3xl:hover {
+            border-color: #ff00ff; /* Neon pink */
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);
+            transform: scale(1.05); /* Slight zoom effect */
+            transition: all 0.3s ease-in-out;
+        }
 
         /* Playful 3D Button */
         .fun-button {
@@ -139,4 +156,3 @@
         }
     </style>
 </x-app-layout>
-   

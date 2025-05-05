@@ -10,10 +10,10 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                
+
                 <!-- Add Moderator Button -->
                 <a href="{{ route('admin.moderators.create') }}" 
-                   class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded">
+                   class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded mb-4">
                    ➕ {{ __('Add Moderator') }}
                 </a>
 
@@ -21,6 +21,13 @@
                 @if(session('success'))
                     <div class="mt-3 p-3 bg-green-200 text-green-700 rounded">
                         {{ session('success') }}
+                    </div>
+                @endif
+
+                <!-- Error Message -->
+                @if(session('error'))
+                    <div class="mt-3 p-3 bg-red-200 text-red-700 rounded">
+                        {{ session('error') }}
                     </div>
                 @endif
 
@@ -32,6 +39,8 @@
                             <th class="px-4 py-2 border">Email</th>
                             <th class="px-4 py-2 border">Phone No</th>
                             <th class="px-4 py-2 border">Role</th>
+                            <th class="px-4 py-2 border">District</th>
+                            <th class="px-4 py-2 border">Status</th>
                             <th class="px-4 py-2 border">Actions</th>
                         </tr>
                     </thead>
@@ -42,23 +51,30 @@
                                 <td class="border px-4 py-2">{{ $moderator->email }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->phone }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->getRoleNames()->first() ?? 'N/A' }}</td>
-                                <td class="border px-4 py-2 flex space-x-2">
-                                    
+                                <td class="border px-4 py-2">{{ $moderator->district }}</td>
+                                <td class="border px-4 py-2">
+                                    @if($moderator->is_active)
+                                        <span class="text-green-500 font-bold">Active</span>
+                                    @else
+                                        <span class="text-red-500 font-bold">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="border px-4 py-2 flex gap-2">
                                     <!-- Edit Button -->
                                     <a href="{{ route('admin.moderators.edit', $moderator->id) }}" 
-                                       class="px-4 py-2 bg-yellow-500 text-white rounded">
+                                       class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-white rounded">
                                         Edit
                                     </a>
-                                    
+
                                     <!-- Activate/Deactivate Button -->
                                     @if($moderator->is_active)
                                         <a href="{{ route('moderator.deactivate', $moderator->id) }}" 
-                                           class="px-4 py-2 bg-red-500 text-white rounded">
+                                           class="px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded">
                                             Deactivate
                                         </a>
                                     @else
                                         <a href="{{ route('moderator.activate', $moderator->id) }}" 
-                                           class="px-4 py-2 bg-green-500 text-white rounded">
+                                           class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded">
                                             Activate
                                         </a>
                                     @endif
@@ -66,7 +82,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center p-4">No moderators found.</td>
+                                <td colspan="7" class="text-center p-4">No moderators found.</td>
                             </tr>
                         @endforelse
                     </tbody>

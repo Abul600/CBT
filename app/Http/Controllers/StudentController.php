@@ -8,6 +8,6 @@ class StudentController extends Controller
 {
     public function dashboard()
     {
-        return view('dashboards.student.dashboard');
+        return view('student.dashboard'); // Corrected view path
     }
 }

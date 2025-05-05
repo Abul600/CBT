@@ -6,136 +6,162 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
-    /**
-     * Ensure only admins can access this controller.
-     */
     public function __construct()
     {
         $this->middleware(['auth', 'role:admin']);
     }
 
-    /**
-     * Admin Dashboard.
-     */
+    // Admin Dashboard
     public function dashboard()
     {
         return view('admin.dashboard');
     }
 
-    /**
-     * Display a list of all moderators.
-     */
+    // ===========================
+    // MODERATOR MANAGEMENT
+    // ===========================
+
     public function moderators()
     {
-        $moderators = User::role('moderator')->get();
+        $moderators = User::role('moderator')->with('roles')->paginate(10);
         return view('admin.moderators.index', compact('moderators'));
     }
 
-    /**
-     * Show the form to create a new moderator.
-     */
     public function createModerator()
     {
         return view('admin.moderators.create');
     }
 
-    /**
-     * Store a newly created moderator.
-     */
     public function storeModerator(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'required|string|max:15',
-            'district' => 'required|string',
-            'password' => 'required|min:6|confirmed',
+            'district' => 'required|string|max:255',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
-            'district' => $request->district,
-            'password' => Hash::make($request->password),
-        ]);
+        // Check for existing moderator in the same district
+        $existing = User::role('moderator')
+            ->where('district', $validated['district'])
+            ->first();
 
-        // Assign "moderator" role
-        if ($role = Role::where('name', 'moderator')->first()) {
-            $user->assignRole($role);
-        } else {
-            return redirect()->back()->with('error', 'Moderator role does not exist!');
+        if ($existing) {
+            return redirect()->back()->withInput()->with('error', 'A moderator for this district already exists.');
         }
 
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator added successfully.');
+        $user = User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'phone'    => $validated['phone'],
+            'district' => $validated['district'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $user->assignRole('moderator');
+
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator created successfully');
     }
 
-    /**
-     * Show the form to edit a moderator.
-     */
     public function editModerator(User $moderator)
     {
+        if ($moderator->hasRole('admin')) {
+            abort(403, 'Cannot edit administrator accounts');
+        }
+
         return view('admin.moderators.edit', compact('moderator'));
     }
 
-    /**
-     * Update an existing moderator.
-     */
     public function updateModerator(Request $request, User $moderator)
     {
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $moderator->id,
-        ]);
-
-        $moderator->update($request->only('name', 'email'));
-
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator updated successfully.');
-    }
-
-    /**
-     * Delete a moderator.
-     */
-    public function destroyModerator(User $moderator)
-    {
-        $moderator->delete();
-        return redirect()->route('admin.moderators.index')->with('success', 'Moderator deleted successfully.');
-    }
-
-    /**
-     * Store a newly created user with a selected role.
-     */
-    public function storeUser(Request $request)
-    {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|max:15',
-            'district' => 'required|string',
-            'password' => 'required|min:6|confirmed',
-            'role'     => 'required|string|exists:roles,name',
-        ]);
-
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
-            'district' => $request->district,
-            'password' => Hash::make($request->password),
-        ]);
-
-        // Assign selected role
-        if ($role = Role::where('name', $request->role)->first()) {
-            $user->assignRole($role);
-        } else {
-            return redirect()->back()->with('error', 'Selected role does not exist!');
+        if ($moderator->hasRole('admin')) {
+            abort(403, 'Cannot update administrator accounts');
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully with role: ' . $request->role);
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
+            'phone'    => 'required|string|max:15',
+            'district' => 'required|string|max:255',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        // Check for other moderator in the same district (excluding self)
+        $conflict = User::role('moderator')
+            ->where('district', $validated['district'])
+            ->where('id', '!=', $moderator->id)
+            ->first();
+
+        if ($conflict) {
+            return redirect()->back()->withInput()->with('error', 'Another moderator already exists for this district.');
+        }
+
+        $moderator->update([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'phone'    => $validated['phone'],
+            'district' => $validated['district'],
+            'password' => $validated['password']
+                ? Hash::make($validated['password'])
+                : $moderator->password,
+        ]);
+
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator updated successfully');
+    }
+
+    public function destroyModerator(User $moderator)
+    {
+        if ($moderator->hasRole('admin')) {
+            abort(403, 'Cannot delete administrator accounts');
+        }
+
+        $moderator->delete();
+
+        return redirect()->route('admin.moderators.index')
+            ->with('success', 'Moderator deleted successfully');
+    }
+
+    // ===========================
+    // GENERAL USER MANAGEMENT
+    // ===========================
+
+    public function indexUsers()
+    {
+        $users = User::with('roles')->paginate(10);
+        return view('admin.users.index', compact('users'));
+    }
+
+    public function editUser(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            abort(403, 'Cannot edit your own admin account');
+        }
+
+        $roles = Role::all();
+        return view('admin.users.edit', compact('user', 'roles'));
+    }
+
+    public function updateUserRole(Request $request, User $user)
+    {
+        if ($user->id === auth()->id()) {
+            abort(403, 'Cannot modify your own account');
+        }
+
+        $validated = $request->validate([
+            'role' => 'required|exists:roles,name',
+        ]);
+
+        $user->syncRoles([$validated['role']]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User role updated successfully');
     }
 }

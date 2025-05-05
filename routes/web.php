@@ -1,17 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Moderator\ModeratorController;
-use App\Http\Controllers\ExamController;
-use App\Http\Controllers\Moderator\PaperSetterController;
-use App\Http\Controllers\PaperSeaterController;
+use App\Http\Controllers\Moderator\{
+    ModeratorController,
+    ExamController,
+    PaperSetterController,
+    QuestionReviewController
+};
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\PaperSetter\{
+    QuestionController,
+    PaperSetterController as PaperSetterMainController
+};
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| Public Route
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
@@ -20,24 +26,22 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Dashboard (Redirect Based on Role)
+| Authenticated Dashboard Redirect
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', config('jetstream.auth_session'), 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return auth()->user()->redirectToRoleDashboard();
-    })->name('dashboard');
+    Route::get('/dashboard', fn () => auth()->user()->redirectToRoleDashboard())->name('dashboard');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Only Accessible by Admins)
+| Admin Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // ✅ Moderator Management
+    // Moderator Management
     Route::prefix('moderators')->name('moderators.')->group(function () {
         Route::get('/', [AdminController::class, 'moderators'])->name('index');
         Route::get('/create', [AdminController::class, 'createModerator'])->name('create');
@@ -47,7 +51,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::delete('/{moderator}', [AdminController::class, 'destroyModerator'])->name('destroy');
     });
 
-    // ✅ User Management
+    // User Role Management
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [AdminController::class, 'indexUsers'])->name('index');
         Route::get('/{user}/edit', [AdminController::class, 'editUser'])->name('edit');
@@ -57,53 +61,70 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 /*
 |--------------------------------------------------------------------------
-| Moderator Routes (Only Accessible by Moderators)
+| Moderator Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('moderator.')->group(function () {
     Route::get('/dashboard', [ModeratorController::class, 'dashboard'])->name('dashboard');
 
-    // ✅ Paper Setter Management (Resource Routes)
+    // Paper Setter Management
     Route::resource('paper_setters', PaperSetterController::class)->except(['show']);
+    Route::put('/paper_setters/{id}/toggle', [PaperSetterController::class, 'toggleStatus'])->name('paper_setters.toggleStatus');
 
-    // ✅ Toggle Activation Status
-    Route::put('/paper_setters/{id}/toggle', [PaperSetterController::class, 'toggleStatus'])
-         ->name('paper_setters.toggleStatus');
-
-    // ✅ Exam Management
+    // Exam Management
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [ExamController::class, 'index'])->name('index');
         Route::get('/create', [ExamController::class, 'create'])->name('create');
         Route::post('/', [ExamController::class, 'store'])->name('store');
         Route::delete('/{exam}', [ExamController::class, 'destroy'])->name('destroy');
+
+        // Select and assign questions
+        Route::get('/{exam}/select-questions', [ExamController::class, 'selectQuestions'])->name('select_questions');
+        Route::post('/{exam}/assign-questions', [ExamController::class, 'assignQuestions'])->name('assign_questions');
+
+        // View exam questions
+        Route::get('/{exam}/questions', [ExamController::class, 'viewQuestions'])->name('questions');
+        Route::get('/view-questions', [ExamController::class, 'viewQuestions'])->name('view.questions');
+
+        // Add question manually to exam
+        Route::get('/{exam}/questions/create', [ExamController::class, 'createQuestion'])->name('questions.create');
+        Route::post('/{exam}/questions', [ExamController::class, 'storeQuestion'])->name('questions.store');
     });
 
-    // ✅ Additional Moderator Routes
+    // Question Management
+    Route::delete('/questions/{question}', [ExamController::class, 'destroyQuestion'])->name('questions.destroy');
+    Route::patch('/questions/{question}/unassign', [ExamController::class, 'unassign'])->name('questions.unassign');
+    Route::post('/assign-questions', [ExamController::class, 'assignQuestionsToExam'])->name('assign.questions');
+
+    // Review Submitted Questions
+    Route::prefix('review')->name('review.')->group(function () {
+        Route::get('/questions', [QuestionReviewController::class, 'index'])->name('questions.index');
+        Route::post('/questions/{id}/approve', [QuestionReviewController::class, 'approve'])->name('questions.approve');
+        Route::post('/questions/{id}/reject', [QuestionReviewController::class, 'reject'])->name('questions.reject');
+    });
+
+    // Search Questions
     Route::get('/questions/search', [ModeratorController::class, 'searchQuestions'])->name('search-questions');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Paper Setter Routes (Only Accessible by Paper Setters)
+| Paper Setter Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:paper_setter'])->prefix('paper_setter')->name('paper_setter.')->group(function () {
-    Route::get('/dashboard', [PaperSetterController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [PaperSetterMainController::class, 'dashboard'])->name('dashboard');
 
-    // ✅ Question Management for Paper Setters
-    Route::prefix('questions')->name('questions.')->group(function () {
-        Route::get('/', [PaperSetterController::class, 'questionIndex'])->name('index');
-        Route::get('/create', [PaperSetterController::class, 'createQuestion'])->name('create');
-        Route::post('/', [PaperSetterController::class, 'storeQuestion'])->name('store');
-        Route::delete('/{question}', [PaperSetterController::class, 'destroyQuestion'])->name('destroy');
-    });
+    // Question Management
+    Route::resource('questions', QuestionController::class)->except(['show']);
+    Route::post('/questions/sendToModerator', [QuestionController::class, 'sendToModerator'])->name('questions.sendToModerator');
 
-    // ✅ Exam Management for Paper Setters
+    // (Optional) Exam Management by Paper Setter
     Route::prefix('exams')->name('exams.')->group(function () {
-        Route::get('/', [PaperSetterController::class, 'examIndex'])->name('index');
-        Route::get('/create', [PaperSetterController::class, 'createExam'])->name('create');
-        Route::post('/', [PaperSetterController::class, 'storeExam'])->name('store');
-        Route::delete('/{exam}', [PaperSetterController::class, 'destroyExam'])->name('destroy');
+        Route::get('/', [PaperSetterMainController::class, 'examIndex'])->name('index');
+        Route::get('/create', [PaperSetterMainController::class, 'createExam'])->name('create');
+        Route::post('/', [PaperSetterMainController::class, 'storeExam'])->name('store');
+        Route::delete('/{exam}', [PaperSetterMainController::class, 'destroyExam'])->name('destroy');
     });
 });
 
@@ -118,20 +139,20 @@ Route::middleware(['auth', 'role:paper_seater'])->prefix('paper_seater')->name('
 
 /*
 |--------------------------------------------------------------------------
-| Student Routes (Only Accessible by Students)
+| Student Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
-    // ✅ Student Exam Management
+    // Exams
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [StudentController::class, 'examIndex'])->name('index');
         Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view');
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
     });
 
-    // ✅ Student Results
+    // Results
     Route::prefix('results')->name('results.')->group(function () {
         Route::get('/', [StudentController::class, 'resultIndex'])->name('index');
         Route::get('/{exam}', [StudentController::class, 'viewResult'])->name('view');
@@ -140,7 +161,7 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
 
 /*
 |--------------------------------------------------------------------------
-| Moderator Activation & Deactivation Routes
+| Moderator Activation (Outside Role Guard)
 |--------------------------------------------------------------------------
 */
 Route::get('/moderators/activate/{id}', [ModeratorController::class, 'activate'])->name('moderator.activate');

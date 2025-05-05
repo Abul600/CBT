@@ -1,10 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="bg-blue-500 p-4 rounded-md">
-        <h2 class="font-semibold text-xl text-white leading-tight">
-    👤 {{ __('Add Moderator') }}
-</h2>
-
+            <h2 class="font-semibold text-xl text-white leading-tight">
+                👤 {{ __('Add Moderator') }}
+            </h2>
         </div>
     </x-slot>
 
@@ -52,15 +51,14 @@
                     <!-- District Dropdown -->
                     <div class="mt-4">
                         <label class="text-black font-semibold">District</label>
-                        <select name="district" class="border rounded p-2 w-full bg-white text-black 
-                                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none" required>
-                            <option value="" disabled selected>Select District</option>
-                            <option value="Jorhat">Jorhat</option>
-                            <option value="Golaghat">Golaghat</option>
-                            <option value="Lakhimpur">Lakhimpur</option>
-                            <option value="Dibrugarh">Dibrugarh</option>
-                            <option value="Dhemaji">Dhemaji</option>
-                            <option value="Sivasagar">Sivasagar</option>
+                        <select name="district" class="form-input-style" required>
+                            <option value="" disabled {{ old('district') ? '' : 'selected' }}>Select District</option>
+                            <option value="Jorhat" {{ old('district') == 'Jorhat' ? 'selected' : '' }}>Jorhat</option>
+                            <option value="Golaghat" {{ old('district') == 'Golaghat' ? 'selected' : '' }}>Golaghat</option>
+                            <option value="Lakhimpur" {{ old('district') == 'Lakhimpur' ? 'selected' : '' }}>Lakhimpur</option>
+                            <option value="Dibrugarh" {{ old('district') == 'Dibrugarh' ? 'selected' : '' }}>Dibrugarh</option>
+                            <option value="Dhemaji" {{ old('district') == 'Dhemaji' ? 'selected' : '' }}>Dhemaji</option>
+                            <option value="Sivasagar" {{ old('district') == 'Sivasagar' ? 'selected' : '' }}>Sivasagar</option>
                         </select>
                         @error('district')
                             <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -86,14 +84,49 @@
                                placeholder="Confirm Password" required>
                     </div>
 
+                    <!-- User Role Dropdown -->
                     <div class="mt-4">
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded 
-                                                       hover:bg-yellow-300 transition">
-                            Add Moderator
+                        <label for="role" class="text-black font-semibold">User Role</label>
+                        <select id="role" name="role" class="form-input-style" required>
+                            <option value="">-- Select Role --</option>
+                            <option value="moderator" {{ old('role') == 'moderator' ? 'selected' : '' }}>
+                                Moderator
+                            </option>
+                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>
+                                Student
+                            </option>
+                        </select>
+                        @error('role')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="mt-4">
+                        <button type="submit" class="btn-primary">
+                            Create User
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            .form-input-style {
+                @apply border rounded p-2 w-full bg-white text-black placeholder-gray-500 
+                       focus:ring-2 focus:ring-yellow-400 focus:outline-none;
+            }
+
+            .error-message {
+                @apply text-red-500 text-sm mt-1;
+            }
+
+            .btn-primary {
+                @apply px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300 
+                       transition transform hover:scale-105;
+            }
+        </style>
+    @endpush
 </x-app-layout>

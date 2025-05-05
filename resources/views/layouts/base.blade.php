@@ -10,9 +10,19 @@
 </head>
 <body class="bg-gray-100">
     <nav class="bg-blue-600 text-white p-4">
-        <div class="container mx-auto">
+        <div class="container mx-auto flex justify-between items-center">
             <a href="{{ route('dashboard') }}" class="text-lg font-bold">Dashboard</a>
-            <span class="float-right">{{ auth()->user()->name }}</span>
+            
+            <div class="flex items-center space-x-4">
+                <span>{{ auth()->user()->name }}</span>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-700">
+                        Logout
+                    </button>
+                </form>
+            </div>
         </div>
     </nav>
 

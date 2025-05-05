@@ -16,12 +16,13 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            
-            // ❌ REMOVE role_id (Spatie does not use this)
-            // $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('cascade');
 
-            // ✅ Keep 'role' as a string for reference
+            // ✅ 'role' column for role name
             $table->string('role')->default('student'); 
+
+            // ✅ Add moderator_id as a self-referencing foreign key
+            $table->unsignedBigInteger('moderator_id')->nullable();
+            $table->foreign('moderator_id')->references('id')->on('users')->onDelete('set null');
 
             $table->rememberToken();
             $table->string('profile_photo_path', 2048)->nullable();

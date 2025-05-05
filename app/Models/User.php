@@ -12,29 +12,25 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, 
-        HasFactory, 
-        HasProfilePhoto, 
-        Notifiable, 
-        TwoFactorAuthenticatable, 
-        HasRoles;
+    use HasApiTokens,
+        HasFactory,
+        HasProfilePhoto,
+        Notifiable,
+        TwoFactorAuthenticatable,
+        HasRoles {
+            HasRoles::assignRole as spatieAssignRole; // Alias the trait method
+        }
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'email',
         'phone',
         'district',
         'password',
-        'role', // Ensure 'role' is fillable
+        'role', // Ensuring 'role' is fillable
         'is_active', // ✅ Added is_active field
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -42,60 +38,76 @@ class User extends Authenticatable
         'two_factor_secret',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'is_active' => 'boolean', // ✅ Ensure it's treated as a boolean
+        'is_active' => 'boolean',
     ];
 
-    /**
-     * Automatically update role column when assigning roles.
-     */
     protected static function boot()
     {
         parent::boot();
 
-        static::saved(function ($user) {
-            $user->syncRoleColumn();
-        });
-
-        static::created(function ($user) {
-            $user->syncRoleColumn();
+        // Custom event to sync roles
+        static::rolesUpdated(function ($user) {
+            $user->syncRoleToColumn();
         });
     }
 
     /**
-     * Synchronize the 'role' column with the assigned roles.
+     * Custom event hook for role changes
      */
-    public function syncRoleColumn()
+    protected static function rolesUpdated($callback)
     {
-        $roleName = $this->getRoleNames()->first();
+        static::registerModelEvent('rolesUpdated', $callback);
+    }
 
-        // Update only if the role has changed
+    /**
+     * Override assignRole to sync and fire event
+     */
+    public function assignRole($role, $guard = null)
+    {
+        $this->spatieAssignRole($role, $guard); // Call original trait method
+        $this->syncRoleToColumn();
+        $this->fireModelEvent('rolesUpdated');
+    }
+
+    /**
+     * Sync the first role to the legacy `role` column
+     */
+    public function syncRoleToColumn()
+    {
+        $role = $this->roles->first()?->name;
+
         if ($roleName && $this->role !== $roleName) {
             $this->updateQuietly(['role' => $roleName]);
         }
     }
 
     /**
-     * Redirect user based on their role after login.
+     * Role-based redirection
      */
     public function redirectToRoleDashboard()
     {
         return match ($this->getRoleNames()->first()) {
             'admin'        => route('admin.dashboard'),
             'moderator'    => route('moderator.dashboard'),
-            'paper_setter' => route('paper_setter.dashboard'), 
+            'paper_setter' => route('paper_setter.dashboard'),
             'student'      => route('student.dashboard'),
             default        => route('dashboard'),
         };
     }
 
     /**
-     * Scope to get only active users.
+     * Fallback dashboard
+     */
+    protected function defaultDashboard()
+    {
+        return $this->is_active ? route('dashboard') : route('welcome');
+    }
+
+    /**
+     * Scope for active users
      */
     public function scopeActive($query)
     {
