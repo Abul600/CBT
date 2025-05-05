@@ -10,7 +10,7 @@
         <div>
             <label for="question_text">Question:</label>
             <textarea name="question_text" id="question_text" rows="4" required></textarea>
-        </div>
+        </div> 
 
         <div>
             <label for="option_a">Option A:</label>
@@ -19,7 +19,8 @@
 
         <div>
             <label for="option_b">Option B:</label>
-            <input type="text" name="option_b" id="option_b" required>
+            <input type="text" name="option_b" id="option_b" required> 
+            
         </div>
 
         <div>
