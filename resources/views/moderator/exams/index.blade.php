@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    @if($exams->isEmpty()))
+    @if($exams->isEmpty())
         <div class="card">
             <div class="card-body text-center text-muted py-5">
                 <i class="fas fa-clipboard-list fa-3x mb-3"></i>
@@ -65,10 +65,10 @@
                                     <td class="text-end">
                                         <div class="d-flex gap-2 justify-content-end">
                                             <a href="{{ route('moderator.exams.questions', $exam->id) }}" 
-                                               class="btn btn-sm btn-primary" 
+                                               class="btn btn-sm btn-info" 
                                                data-bs-toggle="tooltip"
-                                               title="View assigned questions">
-                                                <i class="fas fa-eye"></i>
+                                               title="View all questions in this exam">
+                                                <i class="fas fa-list"></i> View Questions
                                             </a>
 
                                             <a href="{{ route('moderator.exams.select_questions', $exam) }}" 
