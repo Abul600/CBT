@@ -48,18 +48,12 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        // Custom event to sync roles
-        static::rolesUpdated(function ($user) {
-            $user->syncRoleToColumn();
+        // Hook into the saved event to sync the role to the 'role' column when a role is assigned
+        static::saved(function ($user) {
+            if ($user->isDirty('roles')) {
+                $user->syncRoleToColumn();
+            }
         });
-    }
-
-    /**
-     * Custom event hook for role changes
-     */
-    protected static function rolesUpdated($callback)
-    {
-        static::registerModelEvent('rolesUpdated', $callback);
     }
 
     /**
@@ -69,7 +63,6 @@ class User extends Authenticatable
     {
         $this->spatieAssignRole($role, $guard); // Call original trait method
         $this->syncRoleToColumn();
-        $this->fireModelEvent('rolesUpdated');
     }
 
     /**
@@ -79,8 +72,8 @@ class User extends Authenticatable
     {
         $role = $this->roles->first()?->name;
 
-        if ($roleName && $this->role !== $roleName) {
-            $this->updateQuietly(['role' => $roleName]);
+        if ($role && $this->role !== $role) {
+            $this->updateQuietly(['role' => $role]);
         }
     }
 
