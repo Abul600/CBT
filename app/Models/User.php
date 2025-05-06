@@ -18,17 +18,19 @@ class User extends Authenticatable
         Notifiable,
         TwoFactorAuthenticatable,
         HasRoles {
-            HasRoles::assignRole as spatieAssignRole; // Alias the trait method
+            HasRoles::assignRole as spatieAssignRole;
         }
 
     protected $fillable = [
         'name',
         'email',
         'phone',
-        'district',
         'password',
         'role', // Ensuring 'role' is fillable
         'is_active', // ✅ Added is_active field
+        'district', // Changed from district_id to match your migration
+        'moderator_id', // Added for paper setter logic
+        'is_moderator',
     ];
 
     protected $hidden = [
@@ -42,6 +44,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'is_moderator' => 'boolean',
     ];
 
     protected static function boot()
@@ -61,12 +64,12 @@ class User extends Authenticatable
      */
     public function assignRole($role, $guard = null)
     {
-        $this->spatieAssignRole($role, $guard); // Call original trait method
+        $this->spatieAssignRole($role, $guard);
         $this->syncRoleToColumn();
     }
 
     /**
-     * Sync the first role to the legacy `role` column
+     * Sync the role to the 'role' column in the database
      */
     public function syncRoleToColumn()
     {
@@ -78,7 +81,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Role-based redirection
+     * Redirect user to the appropriate dashboard based on their role
      */
     public function redirectToRoleDashboard()
     {
@@ -92,7 +95,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Fallback dashboard
+     * Get the default dashboard route
      */
     protected function defaultDashboard()
     {
@@ -105,5 +108,30 @@ class User extends Authenticatable
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope for active moderators
+     */
+    public function scopeActiveModerators($query)
+    {
+        return $query->where('role', 'moderator')
+                     ->where('is_moderator', true);
+    }
+
+    /**
+     * Scope for users within a specific district
+     */
+    public function scopeForDistrict($query, $district)
+    {
+        return $query->where('district', $district);
+    }
+
+    /**
+     * Get the Moderator who created this Paper Setter (optional)
+     */
+    public function moderator()
+    {
+        return $this->belongsTo(User::class, 'moderator_id');
     }
 }

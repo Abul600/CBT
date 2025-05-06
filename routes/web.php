@@ -84,7 +84,6 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
 
         // View exam questions
         Route::get('/{exam}/questions', [ExamController::class, 'viewQuestions'])->name('questions');
-        Route::get('/view-questions', [ExamController::class, 'viewQuestions'])->name('view.questions');
 
         // Add question manually to exam
         Route::get('/{exam}/questions/create', [ExamController::class, 'createQuestion'])->name('questions.create');
@@ -161,8 +160,10 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
 
 /*
 |--------------------------------------------------------------------------
-| Moderator Activation (Outside Role Guard)
+| Moderator Activation (Secured)
 |--------------------------------------------------------------------------
 */
-Route::get('/moderators/activate/{id}', [ModeratorController::class, 'activate'])->name('moderator.activate');
-Route::get('/moderators/deactivate/{id}', [ModeratorController::class, 'deactivate'])->name('moderator.deactivate');
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/moderators/activate/{id}', [ModeratorController::class, 'activate'])->name('moderator.activate');
+    Route::get('/moderators/deactivate/{id}', [ModeratorController::class, 'deactivate'])->name('moderator.deactivate');
+});
