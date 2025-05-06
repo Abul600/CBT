@@ -18,16 +18,19 @@ class User extends Authenticatable
         Notifiable,
         TwoFactorAuthenticatable,
         HasRoles {
-            HasRoles::assignRole as spatieAssignRole; // Alias the trait method
+            HasRoles::assignRole as spatieAssignRole;
         }
 
     protected $fillable = [
         'name',
         'email',
         'phone',
-        'district',
         'password',
         'is_active',
+        'role',
+        'district', // Changed from district_id to match your migration
+        'moderator_id', // Added for paper setter logic
+        'is_moderator',
     ];
 
     protected $hidden = [
@@ -41,39 +44,30 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'is_moderator' => 'boolean',
     ];
 
     protected static function boot()
     {
         parent::boot();
 
-        // Custom event to sync roles
         static::rolesUpdated(function ($user) {
             $user->syncRoleToColumn();
         });
     }
 
-    /**
-     * Custom event hook for role changes
-     */
     protected static function rolesUpdated($callback)
     {
         static::registerModelEvent('rolesUpdated', $callback);
     }
 
-    /**
-     * Override assignRole to sync and fire event
-     */
     public function assignRole($role, $guard = null)
     {
-        $this->spatieAssignRole($role, $guard); // Call original trait method
+        $this->spatieAssignRole($role, $guard);
         $this->syncRoleToColumn();
         $this->fireModelEvent('rolesUpdated');
     }
 
-    /**
-     * Sync the first role to the legacy `role` column
-     */
     public function syncRoleToColumn()
     {
         $role = $this->roles->first()?->name;
@@ -83,9 +77,6 @@ class User extends Authenticatable
         }
     }
 
-    /**
-     * Role-based redirection
-     */
     public function redirectToRoleDashboard()
     {
         return match (true) {
@@ -97,19 +88,30 @@ class User extends Authenticatable
         };
     }
 
-    /**
-     * Fallback dashboard
-     */
     protected function defaultDashboard()
     {
         return $this->is_active ? route('dashboard') : route('welcome');
     }
 
-    /**
-     * Scope for active users
-     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeActiveModerators($query)
+    {
+        return $query->where('role', 'moderator')
+                     ->where('is_moderator', true);
+    }
+
+    public function scopeForDistrict($query, $district)
+    {
+        return $query->where('district', $district);
+    }
+
+    // ✅ Optional: Get the Moderator who created this Paper Setter
+    public function moderator()
+    {
+        return $this->belongsTo(User::class, 'moderator_id');
     }
 }

@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Add 'moderator_id' column after 'role' (adjust placement if needed)
             $table->unsignedBigInteger('moderator_id')->nullable()->after('role');
 
-            // Add foreign key referencing 'users.id'
             $table->foreign('moderator_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null'); // If moderator is deleted, set field to null
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('set null');
+
+            $table->index('moderator_id'); // Optional but good for performance
         });
     }
 
@@ -30,6 +30,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['moderator_id']);
+            $table->dropIndex(['moderator_id']); // Drop index before column
             $table->dropColumn('moderator_id');
         });
     }

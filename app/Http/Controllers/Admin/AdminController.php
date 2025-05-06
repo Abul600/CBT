@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
+use App\Rules\UserCanBeModerator;
+use App\Rules\DistrictAvailableForModeratorAssignment;
 
 class AdminController extends Controller
 {
@@ -127,6 +129,49 @@ class AdminController extends Controller
 
         return redirect()->route('admin.moderators.index')
             ->with('success', 'Moderator deleted successfully');
+    }
+
+    public function assignModerator(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => [
+                'required',
+                'exists:users,id',
+                new UserCanBeModerator
+            ],
+            'district_id' => [
+                'required',
+                'exists:districts,id',
+                new DistrictAvailableForModeratorAssignment
+            ]
+        ]);
+
+        try {
+            User::findOrFail($validated['user_id'])->update([
+                'role' => 'moderator',
+                'district_id' => $validated['district_id'],
+                'is_moderator' => true
+            ]);
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'users_active_moderator_district_unique')) {
+                return back()->withErrors([
+                    'district_id' => 'This district already has an active moderator'
+                ]);
+            }
+            throw $e;
+        }
+
+        return redirect()->route('admin.moderators.index')
+                         ->with('success', 'Moderator assigned successfully');
+    }
+
+    public function deactivateModerator(User $moderator)
+    {
+        abort_unless($moderator->is_moderator, 403);
+
+        $moderator->update(['is_moderator' => false]);
+
+        return back()->with('success', 'Moderator deactivated');
     }
 
     // ===========================
