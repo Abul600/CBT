@@ -23,8 +23,16 @@
             </div>
         </x-slot>
 
-        <div class="min-h-screen flex items-center justify-center bg-gray-200">
-            <h1 class="text-2xl font-bold">Welcome to the System</h1>
-        </div>
-    </x-app-layout>
-@endif
+    <div class="min-h-screen bg-cover bg-center flex justify-center items-center" 
+         style="background-image: url('{{ asset('images/666.avif') }}');">
+        
+        @if(auth()->user()->role === 'admin')
+            <a href="{{ route('admin.moderators.index') }}" 
+               class="px-10 py-4 text-xl font-bold w-64 text-center bg-red-500 text-black rounded-lg shadow-md 
+                      hover:bg-blue-600 mt-[-560px] border-4 border-green-400  ring-8 ring-yellow-500 ring-opacity-75">
+                Manage Moderators
+            </a>
+        @endif
+
+    </div>
+</x-app-layout>

@@ -1,13 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Paper Setters') }}
-        </h2>
+        <div class="bg-blue-500 p-4 rounded-md">
+            <h2 class="font-semibold text-xl text-white leading-tight">
+                {{ __('Manage Paper Setters') }}
+            </h2>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+
                 <h1 class="text-2xl font-bold mb-4">Manage Paper Setters</h1>
 
                 <!-- Show flash error if limit exceeded -->
@@ -44,7 +47,7 @@
                     </thead>
                     <tbody>
                         @foreach ($paperSetters as $setter)
-                            <tr>
+                            <tr class="hover:bg-gray-100">
                                 <td class="border border-gray-300 px-4 py-2">{{ $setter->name }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $setter->email }}</td>
                                 <td class="border border-gray-300 px-4 py-2">

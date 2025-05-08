@@ -13,8 +13,8 @@
 
                 <!-- Add Moderator Button -->
                 <a href="{{ route('admin.moderators.create') }}" 
-                   class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded">
-                    Add Moderator
+                   class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded mb-4">
+                   ➕ {{ __('Add Moderator') }}
                 </a>
 
                 <!-- Success Message -->
@@ -37,8 +37,10 @@
                         <tr class="bg-gray-200">
                             <th class="px-4 py-2 border">Name</th>
                             <th class="px-4 py-2 border">Email</th>
+                            <th class="px-4 py-2 border">Phone No</th>
                             <th class="px-4 py-2 border">Role</th>
                             <th class="px-4 py-2 border">District</th>
+                            <th class="px-4 py-2 border">Status</th>
                             <th class="px-4 py-2 border">Actions</th>
                         </tr>
                     </thead>
@@ -47,10 +49,17 @@
                             <tr class="hover:bg-gray-100">
                                 <td class="border px-4 py-2">{{ $moderator->name }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->email }}</td>
-                                <td class="border px-4 py-2">{{ $moderator->getRoleNames()->first() }}</td>
+                                <td class="border px-4 py-2">{{ $moderator->phone }}</td>
+                                <td class="border px-4 py-2">{{ $moderator->getRoleNames()->first() ?? 'N/A' }}</td>
                                 <td class="border px-4 py-2">{{ $moderator->district }}</td>
-                                <td class="border px-4 py-2 flex flex-wrap gap-2">
-                                    
+                                <td class="border px-4 py-2">
+                                    @if($moderator->is_active)
+                                        <span class="text-green-500 font-bold">Active</span>
+                                    @else
+                                        <span class="text-red-500 font-bold">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="border px-4 py-2 flex gap-2">
                                     <!-- Edit Button -->
                                     <a href="{{ route('admin.moderators.edit', $moderator->id) }}" 
                                        class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-white rounded">
@@ -73,7 +82,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center p-4">No moderators found.</td>
+                                <td colspan="7" class="text-center p-4">No moderators found.</td>
                             </tr>
                         @endforelse
                     </tbody>

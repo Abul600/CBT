@@ -133,6 +133,15 @@ Route::middleware(['auth', 'role:paper_setter'])->prefix('paper_setter')->name('
 
 /*
 |--------------------------------------------------------------------------
+| Paper Seater Routes (Only Accessible by Paper Seaters)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:paper_seater'])->prefix('paper_seater')->name('paper_seater.')->group(function () {
+    Route::get('/dashboard', [PaperSeaterController::class, 'dashboard'])->name('dashboard');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Student Routes
 |--------------------------------------------------------------------------
 */

@@ -26,8 +26,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'is_active',
-        'role',
+        'role', // Ensuring 'role' is fillable
+        'is_active', // ✅ Added is_active field
         'district', // Changed from district_id to match your migration
         'moderator_id', // Added for paper setter logic
         'is_moderator',
@@ -51,65 +51,85 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        static::rolesUpdated(function ($user) {
-            $user->syncRoleToColumn();
+        // Hook into the saved event to sync the role to the 'role' column when a role is assigned
+        static::saved(function ($user) {
+            if ($user->isDirty('roles')) {
+                $user->syncRoleToColumn();
+            }
         });
     }
 
-    protected static function rolesUpdated($callback)
-    {
-        static::registerModelEvent('rolesUpdated', $callback);
-    }
-
+    /**
+     * Override assignRole to sync and fire event
+     */
     public function assignRole($role, $guard = null)
     {
         $this->spatieAssignRole($role, $guard);
         $this->syncRoleToColumn();
-        $this->fireModelEvent('rolesUpdated');
     }
 
+    /**
+     * Sync the role to the 'role' column in the database
+     */
     public function syncRoleToColumn()
     {
         $role = $this->roles->first()?->name;
 
         if ($role && $this->role !== $role) {
-            $this->forceFill(['role' => $role])->saveQuietly();
+            $this->updateQuietly(['role' => $role]);
         }
     }
 
+    /**
+     * Redirect user to the appropriate dashboard based on their role
+     */
     public function redirectToRoleDashboard()
     {
-        return match (true) {
-            $this->hasRole('admin') => route('admin.dashboard'),
-            $this->hasRole('moderator') => route('moderator.dashboard'),
-            $this->hasRole('paper_setter') => route('paper_setter.dashboard'),
-            $this->hasRole('student') => route('student.dashboard'),
-            default => $this->defaultDashboard(),
+        return match ($this->getRoleNames()->first()) {
+            'admin'        => route('admin.dashboard'),
+            'moderator'    => route('moderator.dashboard'),
+            'paper_setter' => route('paper_setter.dashboard'),
+            'student'      => route('student.dashboard'),
+            default        => route('dashboard'),
         };
     }
 
+    /**
+     * Get the default dashboard route
+     */
     protected function defaultDashboard()
     {
         return $this->is_active ? route('dashboard') : route('welcome');
     }
 
+    /**
+     * Scope for active users
+     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
+    /**
+     * Scope for active moderators
+     */
     public function scopeActiveModerators($query)
     {
         return $query->where('role', 'moderator')
                      ->where('is_moderator', true);
     }
 
+    /**
+     * Scope for users within a specific district
+     */
     public function scopeForDistrict($query, $district)
     {
         return $query->where('district', $district);
     }
 
-    // ✅ Optional: Get the Moderator who created this Paper Setter
+    /**
+     * Get the Moderator who created this Paper Setter (optional)
+     */
     public function moderator()
     {
         return $this->belongsTo(User::class, 'moderator_id');

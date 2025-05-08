@@ -12,7 +12,7 @@
             <h2 class="text-2xl font-bold text-center mb-6 text-blue-300">Welcome</h2>
             <p class="text-sm text-gray-300 text-center mb-4">Login or Register to continue</p>
 
-            {{ $slot }} <!-- This should already contain the Forgot Password link -->
+            {{ $slot }} <!-- Password field is inside this -->
         </div>
     </div>
 </div>
@@ -35,21 +35,50 @@
     .text-gray-300, a.text-gray-300 {
         color: white !important;
     }
-    a.text-blue-500 {
-        color: blue !important;
-        transition: color 0.3s ease-in-out;
-    }
-    a.text-blue-400:hover {
-        color: lightgray !important;
-    }
     
     /* Forgot Password Link Styling */
-    a.forgot-password {
-        color: red !important;
-        font-weight: bold;
-        transition: color 0.3s ease-in-out;
+    a.forgot-password,
+    a[href*="forgot-password"] {
+        color: blue !important;
+        font-weight: bold !important;
+        transition: color 0.3s ease-in-out !important;
     }
-    a.forgot-password:hover {
-        color: darkred !important;
+    
+    a.forgot-password:hover,
+    a[href*="forgot-password"]:hover {
+        color: red !important;
     }
 </style>
+
+<!-- JavaScript for Eye Icon -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let passwordField = document.querySelector("input[name='password']");
+        if (passwordField) {
+            let wrapper = document.createElement("div");
+            wrapper.classList.add("relative");
+
+            passwordField.parentNode.insertBefore(wrapper, passwordField);
+            wrapper.appendChild(passwordField);
+
+            let button = document.createElement("button");
+            button.type = "button";
+            button.classList.add("absolute", "inset-y-0", "right-2", "flex", "items-center", "text-gray-600", "hover:text-gray-900");
+            button.innerHTML = '<i class="fas fa-eye"></i>';
+            button.onclick = function () {
+                if (passwordField.type === "password") {
+                    passwordField.type = "text";
+                    button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                } else {
+                    passwordField.type = "password";
+                    button.innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            };
+
+            wrapper.appendChild(button);
+        }
+    });
+</script>
+
+<!-- FontAwesome for Icons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
