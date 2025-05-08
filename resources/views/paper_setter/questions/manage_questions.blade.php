@@ -16,19 +16,24 @@
     <a 
         href="{{ route('paper_setter.questions.create') }}" 
         class="btn btn-primary mb-4"
+        title="Add a new question"
     >
         <i class="fas fa-plus me-2"></i> Add Question
     </a>
 
     {{-- Questions Table --}}
-    <form method="POST" action="{{ route('paper_setter.questions.sendToModerator') }}">
+    <form 
+        method="POST" 
+        action="{{ route('paper_setter.questions.sendToModerator') }}"
+        onsubmit="return validateSubmission();"
+    >
         @csrf
 
         <table class="table table-bordered table-hover">
             <thead class="table-light">
                 <tr>
                     <th style="width: 40px;">
-                        <input type="checkbox" id="select-all">
+                        <input type="checkbox" id="select-all" title="Select all draft questions">
                     </th>
                     <th>ID</th>
                     <th>Question Text</th>
@@ -48,6 +53,7 @@
                                     type="checkbox" 
                                     name="question_ids[]" 
                                     value="{{ $question->id }}"
+                                    class="question-checkbox"
                                 >
                             @endif
                         </td>
@@ -84,7 +90,11 @@
                             >
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-sm btn-danger"
+                                    title="Delete question"
+                                >
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -103,7 +113,7 @@
             <button 
                 type="submit" 
                 class="btn btn-primary mt-3"
-                onclick="return confirm('Send selected questions to moderator?')"
+                id="send-button"
             >
                 <i class="fas fa-paper-plane me-2"></i> Send Selected to Moderator
             </button>
@@ -111,15 +121,22 @@
     </form>
 </div>
 
-{{-- "Select All" Checkbox Script --}}
+{{-- Scripts --}}
 <script>
+    // Select all checkboxes
     document.getElementById('select-all')?.addEventListener('change', function () {
-        const checkboxes = document.querySelectorAll('input[name="question_ids[]"]');
-        checkboxes.forEach(checkbox => {
-            if (!checkbox.disabled) {
-                checkbox.checked = this.checked;
-            }
-        });
+        const checkboxes = document.querySelectorAll('.question-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
     });
+
+    // Prevent submitting with no selection
+    function validateSubmission() {
+        const checked = document.querySelectorAll('.question-checkbox:checked');
+        if (checked.length === 0) {
+            alert('Please select at least one draft question to send.');
+            return false;
+        }
+        return confirm('Send selected questions to moderator?');
+    }
 </script>
 @endsection

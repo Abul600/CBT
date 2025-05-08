@@ -10,6 +10,17 @@ class Question extends Model
 {
     use HasFactory;
 
+    // ====== Status Constants ======
+    public const STATUS_DRAFT    = 'draft';
+    public const STATUS_PENDING  = 'pending';  // Changed from STATUS_SENT
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
+    // ====== Question Type Constants ======
+    public const TYPE_MCQ1        = 'mcq1';
+    public const TYPE_MCQ2        = 'mcq2';
+    public const TYPE_DESCRIPTIVE = 'descriptive';
+
     protected $fillable = [
         'paper_setter_id',
         'moderator_id',
@@ -31,74 +42,56 @@ class Question extends Model
         'marks' => 'integer',
     ];
 
-    // ====== Status Constants ======
-    public const STATUS_DRAFT    = 'draft';
-    public const STATUS_SENT     = 'sent';
-    public const STATUS_APPROVED = 'approved';
-    public const STATUS_REJECTED = 'rejected';
-
-    // ====== Question Type Constants ======
-    public const TYPE_MCQ1        = 'mcq1';         // Single correct option
-    public const TYPE_MCQ2        = 'mcq2';         // Multiple correct options (if needed)
-    public const TYPE_DESCRIPTIVE = 'descriptive';
-
     // ====== Relationships ======
-
-    /**
-     * The paper setter who created the question.
-     */
     public function paperSetter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paper_setter_id');
     }
 
-    /**
-     * The moderator who reviewed the question.
-     */
     public function moderator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'moderator_id');
     }
 
-    /**
-     * The exam the question is assigned to.
-     */
     public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
     }
 
     // ====== Query Scopes ======
-
-    /**
-     * Scope: Draft questions (not yet submitted).
-     */
     public function scopeDraft($query)
     {
         return $query->where('status', self::STATUS_DRAFT);
     }
 
-    /**
-     * Scope: Sent to moderator.
-     */
-    public function scopeSent($query)
+    public function scopePending($query)
     {
-        return $query->where('status', self::STATUS_SENT);
+        return $query->where('status', self::STATUS_PENDING);
     }
 
-    /**
-     * Scope: Approved by moderator.
-     */
     public function scopeApproved($query)
     {
         return $query->where('status', self::STATUS_APPROVED);
     }
 
-    /**
-     * Scope: Rejected by moderator.
-     */
     public function scopeRejected($query)
     {
         return $query->where('status', self::STATUS_REJECTED);
+    }
+
+    // ====== Helper Methods ======
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
     }
 }

@@ -65,10 +65,8 @@ class PaperSetterController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        // Get the logged-in moderator
         $moderator = auth()->user();
 
-        // Create the user with auto-assigned moderator_id and district
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,

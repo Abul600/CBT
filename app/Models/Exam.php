@@ -11,6 +11,11 @@ class Exam extends Model
 {
     use HasFactory;
 
+    // Status constants for consistency
+    const STATUS_DRAFT = 'draft';
+    const STATUS_ACTIVE = 'active';
+    const STATUS_COMPLETED = 'completed';
+
     protected $fillable = [
         'name',
         'description',
@@ -27,7 +32,7 @@ class Exam extends Model
     ];
 
     /**
-     * All questions assigned to this exam.
+     * Relationship with questions
      */
     public function questions(): HasMany
     {
@@ -35,16 +40,16 @@ class Exam extends Model
     }
 
     /**
-     * Questions pending moderator approval (status = 'sent').
+     * Questions pending approval
      */
     public function pendingQuestions(): HasMany
     {
         return $this->hasMany(Question::class)
-                    ->where('status', Question::STATUS_SENT);
+                    ->where('status', Question::STATUS_PENDING);
     }
 
     /**
-     * Questions approved by the moderator.
+     * Approved questions
      */
     public function approvedQuestions(): HasMany
     {
@@ -53,7 +58,7 @@ class Exam extends Model
     }
 
     /**
-     * Moderator assigned to this exam.
+     * Moderator relationship
      */
     public function moderator(): BelongsTo
     {
@@ -61,26 +66,58 @@ class Exam extends Model
     }
 
     /**
-     * Determine if the exam is currently active.
+     * Status scopes
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeUpcoming($query)
+    {
+        return $query->where('status', self::STATUS_DRAFT)
+                     ->where('start_time', '>', now());
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', self::STATUS_COMPLETED);
+    }
+
+    /**
+     * Status checkers
      */
     public function isActive(): bool
     {
-        return now()->between($this->start_time, $this->end_time);
+        return $this->status === self::STATUS_ACTIVE &&
+               now()->between($this->start_time, $this->end_time);
     }
 
-    /**
-     * Determine if the exam is scheduled for a future time.
-     */
     public function isUpcoming(): bool
     {
-        return now()->lt($this->start_time);
+        return $this->status === self::STATUS_DRAFT &&
+               now()->lt($this->start_time);
+    }
+
+    public function hasEnded(): bool
+    {
+        return $this->status === self::STATUS_COMPLETED ||
+               now()->gt($this->end_time);
     }
 
     /**
-     * Determine if the exam has ended.
+     * Automatically set status based on timestamps
      */
-    public function hasEnded(): bool
+    protected static function booted()
     {
-        return now()->gt($this->end_time);
+        static::saving(function ($exam) {
+            if ($exam->end_time && now()->gt($exam->end_time)) {
+                $exam->status = self::STATUS_COMPLETED;
+            } elseif ($exam->start_time && now()->gt($exam->start_time)) {
+                $exam->status = self::STATUS_ACTIVE;
+            } else {
+                $exam->status = self::STATUS_DRAFT;
+            }
+        });
     }
 }

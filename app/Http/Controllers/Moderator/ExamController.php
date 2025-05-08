@@ -55,47 +55,52 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam)
     {
-        $this->authorize('delete', $exam);
-        $exam->delete();
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
+        $exam->delete();
         return redirect()->route('moderator.exams.index')
             ->with('success', 'Exam deleted successfully.');
     }
 
     public function viewExamQuestions(Exam $exam)
     {
-        $this->authorize('view', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $exam->load(['questions.paperSetter', 'pendingQuestions']);
-
         return view('moderator.exams.questions.index', compact('exam'));
     }
 
-    public function viewQuestions(Request $request)
+    public function viewQuestions(Request $request, $examId = null)
     {
-        $moderatorId = Auth::id();
-
-        $questions = Question::where('sent_to_moderator_id', $moderatorId)
-            ->whereNull('exam_id')
-            ->get();
-
+        $moderatorId = auth()->id();
         $exams = Exam::where('moderator_id', $moderatorId)->get();
+        $selectedExamId = $examId;
 
-        $exam = null;
+        $questions = $selectedExamId
+            ? Question::where('exam_id', $selectedExamId)
+                      ->where('sent_to_moderator_id', $moderatorId)
+                      ->get()
+            : collect();
 
-        if ($request->has('exam_id')) {
-            $exam = Exam::with('questions.paperSetter')
-                ->where('id', $request->exam_id)
-                ->where('moderator_id', $moderatorId)
-                ->first();
-        }
-
-        return view('moderator.exams.view_questions', compact('questions', 'exams', 'exam'));
+        return view('moderator.exams.view_questions', [
+            'exams' => $exams,
+            'questions' => $questions,
+            'selectedExamId' => $selectedExamId,
+        ]);
     }
 
     public function viewPaperSetterQuestions(Exam $exam)
     {
-        $this->authorize('update', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $questions = Question::with('paperSetter')
             ->where('status', 'sent')
@@ -108,10 +113,12 @@ class ExamController extends Controller
 
     public function manageQuestions(Exam $exam)
     {
-        $this->authorize('update', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $assignedQuestions = $exam->questions()->with('paperSetter')->get();
-
         $availableQuestions = Question::with('paperSetter')
             ->where('status', 'approved')
             ->where('moderator_id', Auth::id())
@@ -123,7 +130,10 @@ class ExamController extends Controller
 
     public function assignOrUnassign(Request $request, Exam $exam)
     {
-        $this->authorize('update', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $assignIds = $request->input('assign_ids', []);
         if (!empty($assignIds)) {
@@ -145,50 +155,61 @@ class ExamController extends Controller
             ->with('success', 'Question assignments updated.');
     }
 
-    public function assignQuestionsToExam(Request $request)
+    public function assignQuestions(Request $request, Exam $exam)
     {
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
+
         $request->validate([
-            'exam_id'      => 'required|exists:exams,id',
             'question_ids' => 'required|array',
+            'question_ids.*' => 'exists:questions,id'
         ]);
-
-        $examId = $request->exam_id;
-
-        $exam = Exam::where('id', $examId)
-            ->where('moderator_id', Auth::id())
-            ->firstOrFail();
 
         Question::whereIn('id', $request->question_ids)
             ->where('sent_to_moderator_id', Auth::id())
             ->whereNull('exam_id')
-            ->update(['exam_id' => $examId]);
+            ->update(['exam_id' => $exam->id]);
 
-        return redirect()->route('moderator.exams.questions', ['exam' => $examId])
+        return redirect()->route('moderator.exams.questions', ['exam' => $exam->id])
             ->with('success', 'Questions assigned to exam successfully.');
     }
 
-    public function unassign(Question $question): RedirectResponse
+    public function unassign(Exam $exam, Question $question): RedirectResponse
     {
-        $this->authorize('update', $question);
+        // Manual ownership checks
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
-        $examId = $question->exam_id;
+        // Additional question ownership check
+        if ($question->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $question->update(['exam_id' => null]);
-
         return redirect()
-            ->route('moderator.exams.questions', ['exam' => $examId])
+            ->route('moderator.exams.questions', ['exam' => $exam->id])
             ->with('success', 'Question unassigned successfully.');
     }
 
     public function createQuestion(Exam $exam)
     {
-        $this->authorize('update', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
+
         return view('moderator.exams.questions.create', compact('exam'));
     }
 
     public function storeQuestion(Request $request, Exam $exam)
     {
-        $this->authorize('update', $exam);
+        // Manual ownership check
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized.');
+        }
 
         $validated = $request->validate([
             'content'    => 'required|string',
