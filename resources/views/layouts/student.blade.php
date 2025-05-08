@@ -12,8 +12,10 @@
             theme: {
                 extend: {
                     colors: {
-                        neon: '#00FFFF',
-                        magenta: '#FF00FF',
+                        neon: '#00ffff',
+                        magenta: '#ff00ff',
+                        emerald: '#10b981',
+                        overlay: 'rgba(0,0,0,0.6)'
                     },
                     backgroundImage: {
                         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -27,17 +29,17 @@
     x-data="{ 
         darkMode: true,  
         open: false,
-        confirmLogout: false,  <!-- Initialize confirmLogout as false -->
+        confirmLogout: false,
         toggleDark() {
             localStorage.setItem('darkMode', this.darkMode);
         }
     }"
     x-init="$watch('darkMode', value => document.documentElement.classList.toggle('dark', value))"
-    class="min-h-screen bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black text-gray-900 dark:text-gray-100 transition-colors duration-500"
+    class="min-h-screen bg-gradient-to-br from-blue-100 via-sky-100 to-white dark:from-indigo-900 dark:via-violet-900 dark:to-fuchsia-900 text-gray-900 dark:text-gray-100 transition-colors duration-500"
 >
 
     <!-- Navbar -->
-    <nav class="sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-xl">
+    <nav class="sticky top-0 z-50 bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 text-white shadow-xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <a href="{{ route('student.dashboard') }}" class="text-2xl font-extrabold tracking-wide flex items-center space-x-2">
                 <span>🚀</span><span>Student Portal</span>
@@ -45,20 +47,20 @@
 
             <div class="hidden md:flex items-center space-x-6">
                 <a href="#" class="relative group">
-                    <span class="group-hover:text-neon transition">👤 Profile</span>
-                    <span class="absolute bottom-0 left-0 w-0 h-1 bg-neon group-hover:w-full transition-all"></span>
+                    <span class="group-hover:text-neon transition duration-300">👤 Profile</span>
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-neon group-hover:w-full transition-all duration-300"></span>
                 </a>
                 <a href="#" class="relative group">
-                    <span class="group-hover:text-neon transition">📢 Notices</span>
-                    <span class="absolute bottom-0 left-0 w-0 h-1 bg-neon group-hover:w-full transition-all"></span>
+                    <span class="group-hover:text-neon transition duration-300">📢 Notices</span>
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-neon group-hover:w-full transition-all duration-300"></span>
                 </a>
                 <a href="#" class="relative group">
-                    <span class="group-hover:text-neon transition">💬 Support</span>
-                    <span class="absolute bottom-0 left-0 w-0 h-1 bg-neon group-hover:w-full transition-all"></span>
+                    <span class="group-hover:text-neon transition duration-300">💬 Support</span>
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-neon group-hover:w-full transition-all duration-300"></span>
                 </a>
 
                 <!-- Logout Button -->
-                <button @click="confirmLogout = true" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded text-white font-semibold shadow hover:shadow-lg transition">
+                <button @click="confirmLogout = true" class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded text-white font-semibold shadow-md hover:shadow-lg transition">
                     Logout
                 </button>
             </div>
@@ -77,7 +79,7 @@
         </div>
 
         <!-- Mobile Menu -->
-        <div x-show="open" x-transition class="md:hidden px-6 pb-4 bg-purple-700 space-y-2">
+        <div x-show="open" x-transition class="md:hidden px-6 pb-4 bg-indigo-700 space-y-2">
             <a href="#" class="block text-white hover:text-neon">👤 Profile</a>
             <a href="#" class="block text-white hover:text-neon">📢 Notices</a>
             <a href="#" class="block text-white hover:text-neon">💬 Support</a>
@@ -86,7 +88,7 @@
     </nav>
 
     <!-- Logout Modal -->
-    <div x-show="confirmLogout" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div x-show="confirmLogout" x-transition class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg text-center w-full max-w-sm">
             <h2 class="text-xl font-semibold mb-4">Logout Confirmation</h2>
             <p class="mb-6">Are you sure you want to logout?</p>
@@ -98,8 +100,8 @@
         </div>
     </div>
 
-   <!-- Main Content -->
-   <main class="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8">
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8">
         @yield('content')
     </main>
 

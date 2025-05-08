@@ -39,17 +39,19 @@
             <textarea name="question_text" id="question_text" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" rows="4" required>{{ old('question_text') }}</textarea>
         </div>
 
-        <!-- MCQ Options -->
+        <!-- MCQ Options (2x2 Grid) -->
         <div id="mcq_options" class="mt-3">
-            <label class="font-medium text-gray-700">Options:</label>
-            <input type="text" name="option_a" placeholder="Option A" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full mb-2" value="{{ old('option_a') }}">
-            <input type="text" name="option_b" placeholder="Option B" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full mb-2" value="{{ old('option_b') }}">
-            <input type="text" name="option_c" placeholder="Option C" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full mb-2" value="{{ old('option_c') }}">
-            <input type="text" name="option_d" placeholder="Option D" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full mb-2" value="{{ old('option_d') }}">
+            <label class="font-medium text-gray-700 mb-2 block">Options:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" name="option_a" placeholder="Option A" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" value="{{ old('option_a') }}">
+                <input type="text" name="option_b" placeholder="Option B" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" value="{{ old('option_b') }}">
+                <input type="text" name="option_c" placeholder="Option C" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" value="{{ old('option_c') }}">
+                <input type="text" name="option_d" placeholder="Option D" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" value="{{ old('option_d') }}">
+            </div>
         </div>
 
         <!-- Correct Option -->
-        <div id="correct_option_wrapper" class="form-group mt-2">
+        <div id="correct_option_wrapper" class="form-group mt-3">
             <label for="correct_option" class="font-medium text-gray-700">Correct Option:</label>
             <select name="correct_option" id="correct_option" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full">
                 <option value="">-- Select Correct Option --</option>
@@ -62,12 +64,13 @@
         </div>
 
         <!-- Marks -->
-        <div class="form-group mt-2">
+        <div class="form-group mt-3">
             <label for="marks" class="font-medium text-gray-700">Marks:</label>
             <input type="number" name="marks" id="marks" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" min="1" max="100" value="{{ old('marks', 1) }}" required>
         </div>
 
-        <button type="submit" class="btn btn-success w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white py-3 rounded-lg shadow-lg mt-4 transform hover:scale-105 transition-all duration-300">
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-success w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white py-3 rounded-lg shadow-lg mt-6 transform hover:scale-105 transition-all duration-300">
             Create Question
         </button>
     </form>
@@ -79,7 +82,6 @@
             const correctOption = document.getElementById("correct_option_wrapper");
             const marks = document.getElementById("marks");
 
-            // Show/hide sections based on question type
             if (type === "descriptive") {
                 mcqOptions.style.display = "none";
                 correctOption.style.display = "none";
