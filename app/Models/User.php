@@ -21,18 +21,24 @@ class User extends Authenticatable
             HasRoles::assignRole as spatieAssignRole;
         }
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'name',
         'email',
         'phone',
         'password',
-        'role', // Ensuring 'role' is fillable
-        'is_active', // ✅ Added is_active field
-        'district', // Changed from district_id to match your migration
-        'moderator_id', // Added for paper setter logic
+        'role',
+        'is_active',
+        'district_id',
+        'moderator_id',
         'is_moderator',
     ];
 
+    /**
+     * The attributes that should be hidden for arrays.
+     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -40,6 +46,9 @@ class User extends Authenticatable
         'two_factor_secret',
     ];
 
+    /**
+     * The attributes that should be cast.
+     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -47,11 +56,13 @@ class User extends Authenticatable
         'is_moderator' => 'boolean',
     ];
 
+    /**
+     * Boot method for model event listeners.
+     */
     protected static function boot()
     {
         parent::boot();
 
-        // Hook into the saved event to sync the role to the 'role' column when a role is assigned
         static::saved(function ($user) {
             if ($user->isDirty('roles')) {
                 $user->syncRoleToColumn();
@@ -120,18 +131,34 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope for users within a specific district
+     * Scope for users within a specific district ID
      */
-    public function scopeForDistrict($query, $district)
+    public function scopeForDistrict($query, $districtId)
     {
-        return $query->where('district', $district);
+        return $query->where('district_id', $districtId);
     }
 
     /**
-     * Get the Moderator who created this Paper Setter (optional)
+     * The district this user belongs to
+     */
+    public function district()
+    {
+        return $this->belongsTo(District::class, 'district_id');
+    }
+
+    /**
+     * Get the Moderator who created this Paper Setter
      */
     public function moderator()
     {
         return $this->belongsTo(User::class, 'moderator_id');
+    }
+
+    /**
+     * Get the exam results for this user
+     */
+    public function results()
+    {
+        return $this->hasMany(Result::class);
     }
 }

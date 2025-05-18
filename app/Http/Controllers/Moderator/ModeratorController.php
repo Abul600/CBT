@@ -36,25 +36,33 @@ class ModeratorController extends Controller
     public function storePaperSetter(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:15',
-            'district' => 'required|string',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'phone'    => 'required|string|max:15',
             'password' => 'required|confirmed|min:6',
         ]);
 
+        $moderator = auth()->user();
+
+        if (!$moderator->district_id) {
+            return redirect()->back()
+                ->with('error', 'Your moderator account is not assigned to a district. Contact the administrator.');
+        }
+
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'district' => $request->district,
-            'password' => Hash::make($request->password),
-            'is_active' => true,
+            'name'         => $request->name,
+            'email'        => $request->email,
+            'phone'        => $request->phone,
+            'district_id'  => $moderator->district_id,
+            'moderator_id' => $moderator->id,
+            'password'     => Hash::make($request->password),
+            'is_active'    => true,
         ]);
 
         $user->assignRole('paper_setter');
 
-        return redirect()->route('moderator.paper_setters.index')->with('success', 'Paper Setter added successfully.');
+        return redirect()->route('moderator.paper_setters.index')
+            ->with('success', 'Paper Setter added successfully.');
     }
 
     public function destroyPaperSetter(User $paperSetter)
@@ -67,6 +75,8 @@ class ModeratorController extends Controller
     {
         return view('moderator.search-questions');
     }
+
+    // Admin-only methods below:
 
     public function index()
     {
@@ -85,25 +95,25 @@ class ModeratorController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'required|string|max:15',
-            'district' => 'required|string|max:255',
+            'district' => 'required|integer|exists:districts,id',
             'password' => 'required|confirmed|min:6',
         ]);
 
-        // ❌ Prevent duplicate moderator for the same district
-        $existing = User::where('district', $request->district)
+        $existing = User::where('district_id', $request->district)
                         ->role('moderator')
                         ->first();
+
         if ($existing) {
             return redirect()->back()->withInput()->with('error', 'A moderator already exists for this district.');
         }
 
         $user = User::create([
-            'name'      => $request->name,
-            'email'     => $request->email,
-            'phone'     => $request->phone,
-            'district'  => $request->district,
-            'password'  => Hash::make($request->password),
-            'is_active' => true,
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'phone'       => $request->phone,
+            'district_id' => $request->district,
+            'password'    => Hash::make($request->password),
+            'is_active'   => true,
         ]);
 
         $user->assignRole('moderator');
@@ -122,15 +132,15 @@ class ModeratorController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
             'phone'    => 'required|string|max:15',
-            'district' => 'required|string|max:255',
+            'district' => 'required|integer|exists:districts,id',
             'password' => 'nullable|confirmed|min:6',
         ]);
 
-        // ❌ Prevent another moderator in same district (excluding self)
         $existing = User::where('id', '!=', $moderator->id)
-                        ->where('district', $request->district)
+                        ->where('district_id', $request->district)
                         ->role('moderator')
                         ->first();
+
         if ($existing) {
             return redirect()->back()->withInput()->with('error', 'Another moderator is already assigned to this district.');
         }
@@ -138,7 +148,7 @@ class ModeratorController extends Controller
         $moderator->name = $request->name;
         $moderator->email = $request->email;
         $moderator->phone = $request->phone;
-        $moderator->district = $request->district;
+        $moderator->district_id = $request->district;
 
         if ($request->password) {
             $moderator->password = Hash::make($request->password);

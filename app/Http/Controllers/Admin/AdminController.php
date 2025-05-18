@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\District;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -18,15 +19,10 @@ class AdminController extends Controller
         $this->middleware(['auth', 'role:admin']);
     }
 
-    // Admin Dashboard
     public function dashboard()
     {
         return view('admin.dashboard');
     }
-
-    // ===========================
-    // MODERATOR MANAGEMENT
-    // ===========================
 
     public function moderators()
     {
@@ -36,22 +32,23 @@ class AdminController extends Controller
 
     public function createModerator()
     {
-        return view('admin.moderators.create');
+        $districts = District::all(); // Fetch all districts
+        return view('admin.moderators.create', compact('districts'));
     }
 
     public function storeModerator(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|max:15',
-            'district' => 'required|string|max:255',
-            'password' => 'required|min:8|confirmed',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'phone'       => 'required|string|max:15',
+            'district_id' => 'required|exists:districts,id',
+            'password'    => 'required|min:8|confirmed',
         ]);
 
         // Check for existing moderator in the same district
         $existing = User::role('moderator')
-            ->where('district', $validated['district'])
+            ->where('district_id', $validated['district_id'])
             ->first();
 
         if ($existing) {
@@ -59,11 +56,12 @@ class AdminController extends Controller
         }
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'],
-            'district' => $validated['district'],
-            'password' => Hash::make($validated['password']),
+            'name'        => $validated['name'],
+            'email'       => $validated['email'],
+            'phone'       => $validated['phone'],
+            'district_id' => $validated['district_id'],
+            'password'    => Hash::make($validated['password']),
+            'is_moderator' => true,
         ]);
 
         $user->assignRole('moderator');
@@ -88,16 +86,16 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
-            'phone'    => 'required|string|max:15',
-            'district' => 'required|string|max:255',
-            'password' => 'nullable|min:8|confirmed',
+            'name'        => 'required|string|max:255',
+            'email'       => ['required', 'email', Rule::unique('users')->ignore($moderator->id)],
+            'phone'       => 'required|string|max:15',
+            'district_id' => 'required|exists:districts,id',
+            'password'    => 'nullable|min:8|confirmed',
         ]);
 
-        // Check for other moderator in the same district (excluding self)
+        // Check for another moderator in the same district
         $conflict = User::role('moderator')
-            ->where('district', $validated['district'])
+            ->where('district_id', $validated['district_id'])
             ->where('id', '!=', $moderator->id)
             ->first();
 
@@ -106,13 +104,13 @@ class AdminController extends Controller
         }
 
         $moderator->update([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'],
-            'district' => $validated['district'],
-            'password' => $validated['password']
-                ? Hash::make($validated['password'])
-                : $moderator->password,
+            'name'        => $validated['name'],
+            'email'       => $validated['email'],
+            'phone'       => $validated['phone'],
+            'district_id' => $validated['district_id'],
+            'password'    => $validated['password']
+                                ? Hash::make($validated['password'])
+                                : $moderator->password,
         ]);
 
         return redirect()->route('admin.moderators.index')
@@ -148,7 +146,6 @@ class AdminController extends Controller
 
         try {
             User::findOrFail($validated['user_id'])->update([
-                'role' => 'moderator',
                 'district_id' => $validated['district_id'],
                 'is_moderator' => true
             ]);
@@ -173,10 +170,6 @@ class AdminController extends Controller
 
         return back()->with('success', 'Moderator deactivated');
     }
-
-    // ===========================
-    // GENERAL USER MANAGEMENT
-    // ===========================
 
     public function indexUsers()
     {

@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <h2 class="mb-4">Manage Questions for Exam: {{ $exam->name }}</h2>
 
-    <form method="POST" action="{{ route('moderator.exams.sync_questions', $exam->id) }}">
+    <form method="POST" action="{{ route('moderator.exams.questions.assign', $exam) }}">
         @csrf
 
         {{-- Unassigned Questions --}}
@@ -85,6 +85,7 @@
             </div>
         </div>
 
+        {{-- Form Actions --}}
         <div class="d-flex justify-content-between align-items-center">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save me-2"></i>Save Changes
@@ -95,24 +96,24 @@
         </div>
     </form>
 </div>
+@endsection
 
 @section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Select All Unassigned
-        document.getElementById('select-all-unassigned')?.addEventListener('change', function(e) {
+        document.getElementById('select-all-unassigned')?.addEventListener('change', function (e) {
             document.querySelectorAll('input[name="assign_ids[]"]').forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });
 
         // Select All Assigned
-        document.getElementById('select-all-assigned')?.addEventListener('change', function(e) {
+        document.getElementById('select-all-assigned')?.addEventListener('change', function (e) {
             document.querySelectorAll('input[name="unassign_ids[]"]').forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });
     });
 </script>
-@endsection
 @endsection

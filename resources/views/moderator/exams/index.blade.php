@@ -65,10 +65,10 @@
                                     <td class="text-end">
                                         <div class="d-flex gap-2 justify-content-end">
                                             <a href="{{ route('moderator.exams.questions', $exam->id) }}" 
-                                               class="btn btn-sm btn-info" 
+                                               class="btn btn-sm btn-primary" 
                                                data-bs-toggle="tooltip"
-                                               title="View all questions in this exam">
-                                                <i class="fas fa-list"></i> View Questions
+                                               title="View assigned questions">
+                                                <i class="fas fa-eye"></i>
                                             </a>
 
                                             <a href="{{ route('moderator.exams.select_questions', $exam) }}" 

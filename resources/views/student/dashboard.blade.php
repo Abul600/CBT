@@ -3,6 +3,7 @@
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-black flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto p-12 rounded-3xl shadow-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        
         <!-- Header -->
         <div class="text-center mb-16">
             <h1 class="text-5xl font-extrabold text-slate-900 dark:text-white">
@@ -15,8 +16,9 @@
 
         <!-- Card Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+
             <!-- Take Exam -->
-            <a href="#"
+            <a href="{{ route('student.take.exam') }}"
                class="relative bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-3xl p-8 shadow-md transform hover:scale-105 transition duration-300 border border-transparent hover:border-indigo-300">
                 <div class="absolute top-0 right-0 mt-4 mr-4 text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full animate-pulse">
                     New
@@ -31,7 +33,7 @@
             </a>
 
             <!-- View Results -->
-            <a href="#"
+            <a href="{{ route('student.view.results') }}"
                class="bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700 rounded-3xl p-8 shadow-md transform hover:scale-105 transition duration-300 border border-transparent hover:border-teal-300">
                 <div class="flex items-center justify-center w-16 h-16 bg-white text-teal-700 rounded-full text-3xl mx-auto mb-6 shadow-inner">
                     📊
@@ -43,7 +45,7 @@
             </a>
 
             <!-- Study Materials -->
-            <a href="#"
+            <a href="{{ route('student.study.materials') }}"
                class="bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700 rounded-3xl p-8 shadow-md transform hover:scale-105 transition duration-300 border border-transparent hover:border-sky-300">
                 <div class="flex items-center justify-center w-16 h-16 bg-white text-sky-700 rounded-full text-3xl mx-auto mb-6 shadow-inner">
                     📚
@@ -53,6 +55,7 @@
                     Access notes, guides, and books.
                 </p>
             </a>
+
         </div>
     </div>
 </div>

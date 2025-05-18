@@ -41,6 +41,14 @@ return new class extends Migration {
             $table->enum('status', ['draft', 'pending', 'approved', 'rejected'])
                   ->default('draft');
 
+            // Tracking Fields
+            $table->foreignId('sent_to_moderator_id')
+                  ->nullable()
+                  ->constrained('users')
+                  ->onDelete('set null');
+
+            $table->timestamp('sent_at')->nullable();
+
             $table->timestamps();
         });
     }

@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Moderator;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Question;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Models\Question;
 
 class PaperSetterController extends Controller
 {
@@ -59,28 +60,29 @@ class PaperSetterController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'phone' => 'required|string|max:20',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users',
+            'phone'    => 'required|string|max:20',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $moderator = auth()->user();
+        $moderator = Auth::user();
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'district' => $moderator->district,
+            'name'         => $request->name,
+            'email'        => $request->email,
+            'phone'        => $request->phone,
+            'password'     => Hash::make($request->password),
+            'is_active'    => true,
+            'is_moderator' => false,
             'moderator_id' => $moderator->id,
-            'is_active' => 1,
+            'district_id'  => $moderator->district_id,
         ]);
 
         $user->assignRole('paper_setter');
 
         return redirect()->route('moderator.paper_setters.index')
-            ->with('success', 'Paper Setter added successfully.');
+            ->with('success', 'Paper Setter created successfully.');
     }
 
     /** Show the form for editing the specified paper setter. */
@@ -101,12 +103,12 @@ class PaperSetterController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $paperSetter->id,
         ]);
 
         $paperSetter->update([
-            'name' => $request->name,
+            'name'  => $request->name,
             'email' => $request->email,
         ]);
 
@@ -176,15 +178,15 @@ class PaperSetterController extends Controller
     {
         $request->validate([
             'question_text' => 'required|string',
-            'type' => 'required|string',
-            'marks' => 'required|numeric|min:1',
+            'type'          => 'required|string',
+            'marks'         => 'required|numeric|min:1',
         ]);
 
         Question::create([
-            'question_text' => $request->question_text,
-            'type' => $request->type,
-            'marks' => $request->marks,
-            'created_by' => auth()->id(),
+            'question_text'     => $request->question_text,
+            'type'              => $request->type,
+            'marks'             => $request->marks,
+            'created_by'        => auth()->id(),
             'sent_to_moderator' => false,
         ]);
 
@@ -220,7 +222,7 @@ class PaperSetterController extends Controller
     public function sendToModerator(Request $request)
     {
         $request->validate([
-            'question_ids' => 'required|array',
+            'question_ids'   => 'required|array',
             'question_ids.*' => 'exists:questions,id',
         ]);
 

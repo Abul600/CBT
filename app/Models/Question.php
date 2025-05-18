@@ -21,10 +21,12 @@ class Question extends Model
     public const TYPE_MCQ2        = 'mcq2';
     public const TYPE_DESCRIPTIVE = 'descriptive';
 
+    // ====== Fillable Fields ======
     protected $fillable = [
+        'district_id',
+        'exam_id',
         'paper_setter_id',
         'moderator_id',
-        'exam_id',
         'question_text',
         'option_a',
         'option_b',
@@ -34,12 +36,16 @@ class Question extends Model
         'type',
         'marks',
         'status',
+        'sent_to_moderator_id',
+        'sent_at',
     ];
 
+    // ====== Casts ======
     protected $casts = [
         'status' => 'string',
         'correct_option' => 'string',
         'marks' => 'integer',
+        'sent_at' => 'datetime',
     ];
 
     // ====== Relationships ======
@@ -56,6 +62,11 @@ class Question extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function sentToModerator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_to_moderator_id');
     }
 
     // ====== Query Scopes ======

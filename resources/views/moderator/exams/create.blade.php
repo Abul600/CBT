@@ -47,6 +47,21 @@
                         <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}" class="w-full border-gray-300 rounded p-2">
                     </div>
 
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="district_id">
+                            District (Optional)
+                        </label>
+                        <select name="district_id" id="district_id"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight">
+                            <option value="">-- No District --</option>
+                            @foreach($districts as $district)
+                                <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
+                                    {{ $district->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         Create Exam
                     </button>

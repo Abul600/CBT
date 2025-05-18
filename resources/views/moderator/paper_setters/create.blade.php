@@ -44,12 +44,6 @@
                     @enderror
                 </div>
 
-                <!-- District Field (Readonly) -->
-                <div class="relative">
-                    <label class="block font-medium text-sm text-gray-700">District</label>
-                    <input type="text" name="district" value="{{ auth()->user()->district }}" readonly class="border-gray-300 rounded w-full bg-gray-100 cursor-not-allowed">
-                </div>
-
                 <!-- Password Field -->
                 <div class="relative">
                     <input type="password" name="password" required class="fun-input peer @error('password') border-red-500 @enderror" placeholder=" ">
@@ -65,6 +59,19 @@
                     <label class="fun-label">Confirm Password</label>
                 </div>
 
+                {{-- District inputs removed since they’re set automatically --}}
+                {{-- 
+                <div class="form-group">
+                    <label>District</label>
+                    <input type="text" name="district" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>District ID</label>
+                    <input type="number" name="district_id" class="form-control">
+                </div>
+                --}}
+
                 <!-- Submit Button -->
                 <div class="col-span-2 mt-8 text-center">
                     <button type="submit" class="fun-button">Add Paper Setter</button>
@@ -74,7 +81,6 @@
     </div>
 
     <style>
-        /* Floating Labels */
         .relative {
             position: relative;
         }
@@ -101,7 +107,6 @@
             color: #e91e63;
         }
 
-        /* 3D Input Fields */
         .fun-input {
             width: 100%;
             padding: 14px;
@@ -120,15 +125,13 @@
             box-shadow: 5px 5px 20px rgba(233, 30, 99, 0.3), -4px -4px 12px rgba(255, 255, 255, 0.9);
         }
 
-        /* Glowing effect + Zoom on hover */
         .relative.w-full.max-w-3xl:hover {
-            border-color: #ff00ff; /* Neon pink */
+            border-color: #ff00ff;
             box-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);
-            transform: scale(1.05); /* Slight zoom effect */
+            transform: scale(1.05);
             transition: all 0.3s ease-in-out;
         }
 
-        /* Playful 3D Button */
         .fun-button {
             background: linear-gradient(135deg, #e91e63, #6a1b9a);
             padding: 14px 28px;

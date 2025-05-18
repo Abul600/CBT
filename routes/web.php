@@ -71,35 +71,35 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
     Route::resource('paper_setters', PaperSetterController::class)->except(['show']);
     Route::put('/paper_setters/{id}/toggle', [PaperSetterController::class, 'toggleStatus'])->name('paper_setters.toggleStatus');
 
-    // Exam Management
+    // Exam Management with Authorization Middleware
+    Route::resource('exams', ExamController::class)
+        ->middleware('can:viewAny,App\Models\Exam');
+
     Route::prefix('exams')->name('exams.')->group(function () {
-        Route::get('/', [ExamController::class, 'index'])->name('index');
-        Route::get('/create', [ExamController::class, 'create'])->name('create');
-        Route::post('/', [ExamController::class, 'store'])->name('store');
-        Route::delete('/{exam}', [ExamController::class, 'destroy'])->name('destroy');
+        Route::get('/{exam}/select-questions', [ExamController::class, 'selectQuestions'])
+            ->name('select_questions')
+            ->middleware('can:selectQuestions,exam');
 
-        // Select and assign questions
-        Route::get('/{exam}/select-questions', [ExamController::class, 'selectQuestions'])->name('select_questions');
-        Route::post('/{exam}/assign-questions', [ExamController::class, 'assignQuestions'])->name('assign_questions');
+        Route::post('/{exam}/assign-questions', [ExamController::class, 'assignQuestions'])
+            ->name('questions.assign') // ✅ Fixed route name
+            ->middleware('can:assignQuestions,exam');
 
-        // View exam questions
         Route::get('/{exam}/questions', [ExamController::class, 'viewQuestions'])->name('questions');
-        Route::get('/view-questions', [ExamController::class, 'viewQuestions'])->name('view.questions');
+        Route::get('/{exam}/questions/view', [ExamController::class, 'viewQuestions'])->name('questions.view');
 
-        // Add question manually to exam
         Route::get('/{exam}/questions/create', [ExamController::class, 'createQuestion'])->name('questions.create');
         Route::post('/{exam}/questions', [ExamController::class, 'storeQuestion'])->name('questions.store');
 
-        // Unassign question from exam (FIXED ROUTE)
-        Route::patch('/{exam}/questions/{question}/unassign', [ExamController::class, 'unassign'])
-             ->name('unassign_question');
+        Route::patch('/{exam}/questions/{question}/unassign', [ExamController::class, 'unassign'])->name('unassign_question');
     });
 
-    // Question Management
+    // Delete Question
     Route::delete('/questions/{question}', [ExamController::class, 'destroyQuestion'])->name('questions.destroy');
+
+    // Mass Assign Questions to Exam
     Route::post('/assign-questions', [ExamController::class, 'assignQuestionsToExam'])->name('assign.questions');
 
-    // Review Submitted Questions
+    // Review Questions
     Route::prefix('review')->name('review.')->group(function () {
         Route::get('/questions', [QuestionReviewController::class, 'index'])->name('questions.index');
         Route::post('/questions/{id}/approve', [QuestionReviewController::class, 'approve'])->name('questions.approve');
@@ -122,7 +122,7 @@ Route::middleware(['auth', 'role:paper_setter'])->prefix('paper_setter')->name('
     Route::resource('questions', QuestionController::class)->except(['show']);
     Route::post('/questions/sendToModerator', [QuestionController::class, 'sendToModerator'])->name('questions.sendToModerator');
 
-    // (Optional) Exam Management by Paper Setter
+    // Exam Management
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [PaperSetterMainController::class, 'examIndex'])->name('index');
         Route::get('/create', [PaperSetterMainController::class, 'createExam'])->name('create');
@@ -133,25 +133,18 @@ Route::middleware(['auth', 'role:paper_setter'])->prefix('paper_setter')->name('
 
 /*
 |--------------------------------------------------------------------------
-| Paper Seater Routes (Only Accessible by Paper Seaters)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'role:paper_seater'])->prefix('paper_seater')->name('paper_seater.')->group(function () {
-    Route::get('/dashboard', [PaperSeaterController::class, 'dashboard'])->name('dashboard');
-});
-
-/*
-|--------------------------------------------------------------------------
 | Student Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
-    // Exams
+    // Exam Flow
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [StudentController::class, 'examIndex'])->name('index');
-        Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view');
+        Route::get('/{exam}', [StudentController::class, 'viewExam'])
+            ->name('view')
+            ->middleware('can:view,exam');
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
     });
 
@@ -160,11 +153,17 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
         Route::get('/', [StudentController::class, 'resultIndex'])->name('index');
         Route::get('/{exam}', [StudentController::class, 'viewResult'])->name('view');
     });
+
+    // Dashboard Shortcuts
+    Route::get('/take-exam', [StudentController::class, 'takeExam'])->name('take.exam');
+    Route::get('/view-results', [StudentController::class, 'viewResults'])->name('view.results');
+    Route::get('/study-materials', [StudentController::class, 'studyMaterials'])->name('study.materials');
+    Route::get('/search', [StudentController::class, 'search'])->name('search');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Moderator Activation (Outside Role Guard)
+| Moderator Activation Routes
 |--------------------------------------------------------------------------
 */
 Route::get('/moderators/activate/{id}', [ModeratorController::class, 'activate'])->name('moderator.activate');

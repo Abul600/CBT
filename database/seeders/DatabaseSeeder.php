@@ -2,14 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Spatie\Permission\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
     {
         // Ensure all required roles exist
         $roles = ['admin', 'moderator', 'paper_setter', 'student'];
@@ -26,5 +29,11 @@ class DatabaseSeeder extends Seeder
             ]);
             $admin->assignRole('admin');
         }
+
+        // ✅ Call custom seeders
+        $this->call([
+            DistrictSeeder::class,
+            // Add more seeders here if needed...
+        ]);
     }
 }

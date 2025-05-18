@@ -14,7 +14,10 @@ class QuestionController extends Controller
      */
     public function index()
     {
-        $questions = Question::where('paper_setter_id', Auth::id())->get();
+        $questions = Question::where('paper_setter_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('paper_setter.questions.index', compact('questions'));
     }
 
@@ -42,6 +45,14 @@ class QuestionController extends Controller
             'marks'           => 'exclude_if:type,mcq1|exclude_if:type,mcq2|required_if:type,descriptive|integer|min:1|max:100',
         ]);
 
+        $user = Auth::user();
+
+        if (!$user->district_id) {
+            return redirect()
+                ->route('paper_setter.questions.index')
+                ->with('error', 'Your account is not assigned to a district. Contact the administrator.');
+        }
+
         $marks = match ($request->type) {
             'mcq1' => 1,
             'mcq2' => 2,
@@ -50,17 +61,18 @@ class QuestionController extends Controller
         };
 
         Question::create([
-            'exam_id'         => null,
-            'paper_setter_id' => Auth::id(),
-            'question_text'   => $request->question_text,
-            'option_a'        => $request->option_a,
-            'option_b'        => $request->option_b,
-            'option_c'        => $request->option_c,
-            'option_d'        => $request->option_d,
-            'correct_option'  => $request->correct_option,
-            'type'            => $request->type,
-            'marks'           => $marks,
-            'status'          => 'draft',
+            'district_id'       => $user->district_id,
+            'exam_id'           => null,
+            'paper_setter_id'   => $user->id,
+            'question_text'     => $request->question_text,
+            'option_a'          => $request->option_a,
+            'option_b'          => $request->option_b,
+            'option_c'          => $request->option_c,
+            'option_d'          => $request->option_d,
+            'correct_option'    => $request->correct_option,
+            'type'              => $request->type,
+            'marks'             => $marks,
+            'status'            => 'draft',
         ]);
 
         return redirect()
@@ -74,33 +86,38 @@ class QuestionController extends Controller
     public function sendToModerator(Request $request)
     {
         $questionIds = (array) $request->input('question_ids', []);
-        $paperSetter = Auth::user();
-        $moderatorId = $paperSetter->moderator_id;
 
-        if (!$moderatorId) {
-            return redirect()
-                ->route('paper_setter.questions.index')
-                ->with('error', 'No associated moderator found for this paper setter.');
+        // Validate input
+        if (empty($questionIds)) {
+            return redirect()->back()->with('error', 'No questions selected.');
         }
 
+        $user = Auth::user();
+        $moderatorId = $user->moderator_id;
+
+        // Check if the paper setter has a linked moderator
+        if (!$moderatorId) {
+            return redirect()->back()
+                ->with('error', 'You are not assigned to a moderator. Contact support.');
+        }
+
+        // Update questions
         $updatedCount = Question::whereIn('id', $questionIds)
-            ->where('paper_setter_id', $paperSetter->id)
+            ->where('paper_setter_id', $user->id)
             ->where('status', 'draft')
             ->update([
                 'status' => 'sent',
                 'sent_to_moderator_id' => $moderatorId,
-                'moderator_id' => $moderatorId, // ensures correct filtering later
+                'sent_at' => now(), // Ensure this column exists in your DB
             ]);
 
         if ($updatedCount > 0) {
-            return redirect()
-                ->route('paper_setter.questions.index')
-                ->with('success', 'Questions sent to moderator.');
+            return redirect()->back()
+                ->with('success', "$updatedCount question(s) sent to moderator.");
         }
 
-        return redirect()
-            ->route('paper_setter.questions.index')
-            ->with('error', 'No draft questions were submitted.');
+        return redirect()->back()
+            ->with('error', 'No draft questions were sent. They may already be sent.');
     }
 
     /**
@@ -110,19 +127,23 @@ class QuestionController extends Controller
     {
         $questionIds = (array) $request->input('question_ids', []);
 
+        if (empty($questionIds)) {
+            return redirect()->back()->with('error', 'Please select at least one question to delete.');
+        }
+
         $deletedCount = Question::whereIn('id', $questionIds)
             ->where('paper_setter_id', Auth::id())
-            ->where('status', 'draft') // Optional: Only allow deleting drafts
+            ->where('status', 'draft')
             ->delete();
 
         if ($deletedCount > 0) {
             return redirect()
                 ->route('paper_setter.questions.index')
-                ->with('success', 'Selected question(s) deleted.');
+                ->with('success', "$deletedCount question(s) deleted successfully.");
         }
 
         return redirect()
             ->route('paper_setter.questions.index')
-            ->with('error', 'No questions were deleted.');
+            ->with('error', 'No draft questions were deleted.');
     }
 }

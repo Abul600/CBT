@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Exam;
+use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class ExamPolicy
+{
+    use HandlesAuthorization;
+
+    /**
+     * Determine whether the user can view any exams.
+     */
+    public function viewAny(User $user)
+    {
+        return $user->hasRole('moderator');
+    }
+
+    /**
+     * Determine whether the user can view a specific exam.
+     */
+    public function view(User $user, Exam $exam)
+    {
+        return $user->hasRole('moderator') &&
+               $user->id === $exam->moderator_id &&
+               $user->district_id === $exam->district_id;
+    }
+
+    /**
+     * Determine whether the user can create exams.
+     */
+    public function create(User $user)
+    {
+        return $user->hasRole('moderator');
+    }
+
+    /**
+     * Determine whether the user can update the exam.
+     */
+    public function update(User $user, Exam $exam)
+    {
+        return $this->view($user, $exam);
+    }
+
+    /**
+     * Determine whether the user can delete the exam.
+     */
+    public function delete(User $user, Exam $exam)
+    {
+        return $this->view($user, $exam);
+    }
+
+    /**
+     * Determine whether the user can assign questions to the exam.
+     */
+    public function assignQuestions(User $user, Exam $exam)
+    {
+        return $user->hasRole('moderator') && 
+               $user->id === $exam->moderator_id &&
+               $user->district_id === $exam->district_id;
+    }
+
+    /**
+     * Determine whether the user can select questions for the exam.
+     */
+    public function selectQuestions(User $user, Exam $exam)
+    {
+        return $user->hasRole('moderator') &&
+               $user->id === $exam->moderator_id &&
+               $user->district_id === $exam->district_id;
+    }
+}
