@@ -81,8 +81,9 @@
                             @endswitch
                         </td>
 
-                        {{-- Delete Button --}}
-                        <td>
+                        {{-- Action Buttons --}}
+                        <td class="d-flex gap-2">
+                            {{-- Delete Button --}}
                             <form 
                                 action="{{ route('paper_setter.questions.destroy', $question->id) }}" 
                                 method="POST"
@@ -98,6 +99,25 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
+
+                            {{-- Individual Send Button --}}
+                            @if ($question->status === 'draft')
+                                <form 
+                                    action="{{ route('paper_setter.questions.sendToModerator') }}" 
+                                    method="POST" 
+                                    onsubmit="return confirm('Send this question to the moderator?')"
+                                >
+                                    @csrf
+                                    <input type="hidden" name="question_ids[]" value="{{ $question->id }}">
+                                    <button 
+                                        type="submit" 
+                                        class="btn btn-sm btn-primary"
+                                        title="Send this question to moderator"
+                                    >
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -108,7 +128,7 @@
             </tbody>
         </table>
 
-        {{-- "Send to Moderator" Button (only if draft questions exist) --}}
+        {{-- Bulk Send to Moderator Button --}}
         @if($questions->where('status', 'draft')->count())
             <button 
                 type="submit" 
