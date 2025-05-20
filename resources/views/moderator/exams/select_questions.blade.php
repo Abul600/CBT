@@ -4,10 +4,10 @@
 <div class="container mt-4">
     <h2 class="mb-4">Manage Questions for Exam: {{ $exam->name }}</h2>
 
-    <form method="POST" action="{{ route('moderator.exams.questions.assign', $exam) }}">
+    {{-- Assign Questions Form --}}
+    <form method="POST" action="{{ route('moderator.exams.assign-questions', $exam) }}">
         @csrf
 
-        {{-- Unassigned Questions --}}
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Available Questions (Unassigned)</h5>
@@ -32,7 +32,7 @@
                                 @foreach ($unassignedQuestions as $question)
                                     <tr>
                                         <td>
-                                            <input type="checkbox" name="assign_ids[]" value="{{ $question->id }}">
+                                            <input type="checkbox" name="question_ids[]" value="{{ $question->id }}">
                                         </td>
                                         <td>{{ Str::limit($question->text, 80) }}</td>
                                         <td class="text-center text-capitalize">{{ $question->type }}</td>
@@ -42,11 +42,18 @@
                             </tbody>
                         </table>
                     </div>
+                    <button type="submit" name="action" value="assign" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Assign Selected
+                    </button>
                 @endif
             </div>
         </div>
+    </form>
 
-        {{-- Assigned Questions --}}
+    {{-- Unassign Questions Form --}}
+    <form method="POST" action="{{ route('moderator.exams.unassign-questions', $exam) }}">
+        @csrf
+
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Currently Assigned Questions</h5>
@@ -71,7 +78,7 @@
                                 @foreach ($assignedQuestions as $question)
                                     <tr>
                                         <td>
-                                            <input type="checkbox" name="unassign_ids[]" value="{{ $question->id }}">
+                                            <input type="checkbox" name="question_ids[]" value="{{ $question->id }}">
                                         </td>
                                         <td>{{ Str::limit($question->text, 80) }}</td>
                                         <td class="text-center text-capitalize">{{ $question->type }}</td>
@@ -81,36 +88,36 @@
                             </tbody>
                         </table>
                     </div>
+                    <button type="submit" name="action" value="unassign" class="btn btn-danger">
+                        <i class="fas fa-minus me-2"></i>Unassign Selected
+                    </button>
                 @endif
             </div>
         </div>
-
-        {{-- Form Actions --}}
-        <div class="d-flex justify-content-between align-items-center">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save me-2"></i>Save Changes
-            </button>
-            <a href="{{ route('moderator.exams.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Exams
-            </a>
-        </div>
     </form>
+
+    {{-- Back Link --}}
+    <div class="d-flex justify-content-end mt-3">
+        <a href="{{ route('moderator.exams.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Exams
+        </a>
+    </div>
 </div>
 @endsection
 
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Select All Unassigned
+        // Select All for Unassigned Questions
         document.getElementById('select-all-unassigned')?.addEventListener('change', function (e) {
-            document.querySelectorAll('input[name="assign_ids[]"]').forEach(checkbox => {
+            document.querySelectorAll('form[action*="assign-questions"] input[name="question_ids[]"]').forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });
 
-        // Select All Assigned
+        // Select All for Assigned Questions
         document.getElementById('select-all-assigned')?.addEventListener('change', function (e) {
-            document.querySelectorAll('input[name="unassign_ids[]"]').forEach(checkbox => {
+            document.querySelectorAll('form[action*="unassign-questions"] input[name="question_ids[]"]').forEach(checkbox => {
                 checkbox.checked = e.target.checked;
             });
         });

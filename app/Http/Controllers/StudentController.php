@@ -42,12 +42,11 @@ class StudentController extends Controller
     public function viewResults()
     {
         $results = auth()->user()->results ?? collect();
-
         return view('student.results', compact('results'));
     }
 
     /**
-     * Display available study materials.
+     * Display available study materials (no policy applied).
      */
     public function studyMaterials()
     {
@@ -71,8 +70,7 @@ class StudentController extends Controller
      */
     public function viewExam(Exam $exam)
     {
-        if (!Auth::user()->hasRole('student') ||
-            Auth::user()->district_id !== $exam->district_id) {
+        if (!Auth::user()->hasRole('student') || Auth::user()->district_id !== $exam->district_id) {
             abort(403);
         }
 
@@ -80,7 +78,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Submit exam answers (stub).
+     * Submit exam answers (stub for now).
      */
     public function submitExam(Request $request, Exam $exam)
     {

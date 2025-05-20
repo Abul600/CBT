@@ -18,53 +18,54 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role)
     {
-        // ✅ Ensure user is authenticated
+        // ✅ Ensure the user is logged in
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'You must be logged in to access this page.');
         }
 
         $user = Auth::user();
 
-        // ✅ Role check via Spatie
+        // ✅ Role check via Spatie's hasRole
         if (method_exists($user, 'hasRole') && $user->hasRole($role)) {
             return $next($request);
         }
 
-        // ✅ Fallback role column check (if needed)
-        if (isset($user->role) && $user->role === $role) {
+        // ✅ Optional fallback: role column check
+        if (property_exists($user, 'role') && $user->role === $role) {
             return $next($request);
         }
 
-        // ✅ Unauthorized access handling
+        // ✅ Unauthorized access — redirect based on actual role
         return $this->handleUnauthorizedAccess($user);
     }
 
     /**
-     * Handle unauthorized access and redirect appropriately.
+     * Redirect unauthorized users based on their role or abort.
      *
-     * @param  \Illuminate\Foundation\Auth\User  $user
+     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
      * @return \Illuminate\Http\Response
      */
     protected function handleUnauthorizedAccess($user)
     {
-        // ✅ Redirect based on user's actual role
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard')->with('error', 'You are not authorized to access that section.');
+        if (method_exists($user, 'hasRole')) {
+            if ($user->hasRole('admin')) {
+                return redirect()->route('admin.dashboard')->with('error', 'You are not authorized to access that section.');
+            }
+
+            if ($user->hasRole('moderator')) {
+                return redirect()->route('moderator.dashboard')->with('error', 'You are not authorized to access that section.');
+            }
+
+            if ($user->hasRole('student')) {
+                return redirect()->route('student.dashboard')->with('error', 'You are not authorized to access that section.');
+            }
+
+            if ($user->hasRole('paper_setter')) {
+                return redirect()->route('paper_setter.dashboard')->with('error', 'You are not authorized to access that section.');
+            }
         }
 
-        if ($user->hasRole('moderator')) {
-            return redirect()->route('moderator.dashboard')->with('error', 'You are not authorized to access that section.');
-        }
-
-        if ($user->hasRole('student')) {
-            return redirect()->route('student.dashboard')->with('error', 'You are not authorized to access that section.');
-        }
-
-        if ($user->hasRole('paper_setter')) {
-            return redirect()->route('paper_setter.dashboard')->with('error', 'You are not authorized to access that section.');
-        }
-
-        // ✅ Default: abort with 403
-        return abort(403, 'Unauthorized access.');
+        // ✅ Default fallback — abort
+        return abort(403, 'THIS ACTION IS UNAUTHORIZED.');
     }
 }

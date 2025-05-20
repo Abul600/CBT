@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Question extends Model
 {
@@ -12,7 +13,7 @@ class Question extends Model
 
     // ====== Status Constants ======
     public const STATUS_DRAFT    = 'draft';
-    public const STATUS_PENDING  = 'pending';  // Changed from STATUS_SENT
+    public const STATUS_PENDING  = 'pending';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
 
@@ -24,7 +25,6 @@ class Question extends Model
     // ====== Fillable Fields ======
     protected $fillable = [
         'district_id',
-        'exam_id',
         'paper_setter_id',
         'moderator_id',
         'question_text',
@@ -42,34 +42,48 @@ class Question extends Model
 
     // ====== Casts ======
     protected $casts = [
-        'status' => 'string',
-        'correct_option' => 'string',
-        'marks' => 'integer',
-        'sent_at' => 'datetime',
+        'status'          => 'string',
+        'correct_option'  => 'string',
+        'marks'           => 'integer',
+        'sent_at'         => 'datetime',
     ];
 
     // ====== Relationships ======
+
+    /**
+     * Exams this question belongs to (many-to-many).
+     */
+    public function exams(): BelongsToMany
+    {
+        return $this->belongsToMany(Exam::class, 'exam_question');
+    }
+
+    /**
+     * Paper setter who created this question.
+     */
     public function paperSetter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paper_setter_id');
     }
 
+    /**
+     * Moderator associated with this question.
+     */
     public function moderator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'moderator_id');
     }
 
-    public function exam(): BelongsTo
-    {
-        return $this->belongsTo(Exam::class);
-    }
-
+    /**
+     * Moderator to whom this question was sent.
+     */
     public function sentToModerator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_to_moderator_id');
     }
 
     // ====== Query Scopes ======
+
     public function scopeDraft($query)
     {
         return $query->where('status', self::STATUS_DRAFT);
@@ -91,6 +105,7 @@ class Question extends Model
     }
 
     // ====== Helper Methods ======
+
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;

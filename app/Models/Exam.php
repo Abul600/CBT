@@ -4,21 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Exam extends Model
 {
     use HasFactory;
 
-    // Status constants
-    const STATUS_DRAFT = 'draft';
-    const STATUS_ACTIVE = 'active';
-    const STATUS_COMPLETED = 'completed';
+    // ====== Status Constants ======
+    public const STATUS_DRAFT     = 'draft';
+    public const STATUS_ACTIVE    = 'active';
+    public const STATUS_COMPLETED = 'completed';
 
-    /**
-     * The attributes that are mass assignable.
-     */
+    // ====== Fillable Attributes ======
     protected $fillable = [
         'name',
         'description',
@@ -31,43 +29,41 @@ class Exam extends Model
         'is_active',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     */
+    // ====== Attribute Casting ======
     protected $casts = [
         'start_time' => 'datetime',
         'end_time'   => 'datetime',
         'is_active'  => 'boolean',
     ];
 
+    // ====== Relationships ======
+
     /**
-     * Relationship: All questions assigned to this exam.
+     * Questions assigned to this exam (many-to-many).
      */
-    public function questions(): HasMany
+    public function questions(): BelongsToMany
     {
-        return $this->hasMany(Question::class);
+        return $this->belongsToMany(Question::class, 'exam_question');
     }
 
     /**
-     * Relationship: Pending questions only.
+     * Pending questions only (via pivot).
      */
-    public function pendingQuestions(): HasMany
+    public function pendingQuestions(): BelongsToMany
     {
-        return $this->hasMany(Question::class)
-                    ->where('status', Question::STATUS_PENDING);
+        return $this->questions()->where('status', Question::STATUS_PENDING);
     }
 
     /**
-     * Relationship: Approved questions only.
+     * Approved questions only (via pivot).
      */
-    public function approvedQuestions(): HasMany
+    public function approvedQuestions(): BelongsToMany
     {
-        return $this->hasMany(Question::class)
-                    ->where('status', Question::STATUS_APPROVED);
+        return $this->questions()->where('status', Question::STATUS_APPROVED);
     }
 
     /**
-     * Relationship: The moderator that created the exam.
+     * The moderator that created the exam.
      */
     public function moderator(): BelongsTo
     {
@@ -75,25 +71,21 @@ class Exam extends Model
     }
 
     /**
-     * Relationship: The district to which this exam belongs.
+     * The district the exam belongs to.
      */
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);
     }
 
-    /**
-     * Scope: Only active exams.
-     */
+    // ====== Scopes ======
+
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
                      ->where('is_active', true);
     }
 
-    /**
-     * Scope: Upcoming exams (draft and future start_time).
-     */
     public function scopeUpcoming($query)
     {
         return $query->where('status', self::STATUS_DRAFT)
@@ -101,17 +93,13 @@ class Exam extends Model
                      ->where('is_active', true);
     }
 
-    /**
-     * Scope: Completed exams.
-     */
     public function scopeCompleted($query)
     {
         return $query->where('status', self::STATUS_COMPLETED);
     }
 
-    /**
-     * Check if exam is currently active.
-     */
+    // ====== Helper Methods ======
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE &&
@@ -119,9 +107,6 @@ class Exam extends Model
                now()->between($this->start_time, $this->end_time);
     }
 
-    /**
-     * Check if the exam is upcoming (yet to start).
-     */
     public function isUpcoming(): bool
     {
         return $this->status === self::STATUS_DRAFT &&
@@ -129,17 +114,16 @@ class Exam extends Model
                now()->lt($this->start_time);
     }
 
-    /**
-     * Check if the exam has already ended.
-     */
     public function hasEnded(): bool
     {
         return $this->status === self::STATUS_COMPLETED ||
                now()->gt($this->end_time);
     }
 
+    // ====== Model Events ======
+
     /**
-     * Automatically update exam status before saving.
+     * Automatically update exam status based on time before saving.
      */
     protected static function booted()
     {

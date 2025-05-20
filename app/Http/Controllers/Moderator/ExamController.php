@@ -48,27 +48,22 @@ class ExamController extends Controller
             'status'       => 'draft',
         ]);
 
-        return redirect()->route('moderator.exams.index')
-            ->with('success', 'Exam created!');
+        return redirect()->route('moderator.exams.index')->with('success', 'Exam created!');
     }
 
     public function destroy(Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403, 'This action is unauthorized.');
-        }
+        $this->authorizeExam($exam);
 
+        $exam->questions()->detach();
         $exam->delete();
 
-        return redirect()->route('moderator.exams.index')
-            ->with('success', 'Exam deleted successfully.');
+        return redirect()->route('moderator.exams.index')->with('success', 'Exam deleted successfully.');
     }
 
     public function viewExamQuestions(Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         $exam->load(['questions.paperSetter', 'pendingQuestions']);
 
@@ -84,33 +79,26 @@ class ExamController extends Controller
         $availableQuestions = collect();
 
         if ($request->has('exam_id')) {
-            $selectedExam = Exam::where('moderator_id', $moderator->id)
-                ->find($request->exam_id);
+            $selectedExam = Exam::where('moderator_id', $moderator->id)->find($request->exam_id);
 
             if ($selectedExam) {
-                $availableQuestions = Question::whereNull('exam_id')
+                $availableQuestions = Question::whereDoesntHave('exams')
                     ->where('sent_to_moderator_id', $moderator->id)
                     ->get();
             }
         }
 
-        return view('moderator.exams.view_questions', compact(
-            'exams',
-            'selectedExam',
-            'availableQuestions'
-        ));
+        return view('moderator.exams.view_questions', compact('exams', 'selectedExam', 'availableQuestions'));
     }
 
     public function viewPaperSetterQuestions(Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         $questions = Question::with('paperSetter')
             ->where('status', 'sent')
             ->where('moderator_id', Auth::id())
-            ->whereNull('exam_id')
+            ->whereDoesntHave('exams')
             ->get();
 
         return view('moderator.exams.questions.assign', compact('exam', 'questions'));
@@ -118,19 +106,14 @@ class ExamController extends Controller
 
     public function manageQuestions(Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         $assignedQuestions = $exam->questions()->with('paperSetter')->get();
 
         $availableQuestions = Question::with('paperSetter')
             ->where('status', 'approved')
             ->where('moderator_id', Auth::id())
-            ->where(function ($query) use ($exam) {
-                $query->whereNull('exam_id')
-                      ->orWhere('exam_id', $exam->id);
-            })
+            ->whereDoesntHave('exams')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -139,23 +122,17 @@ class ExamController extends Controller
 
     public function assignOrUnassign(Request $request, Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         $assignIds = $request->input('assign_ids', []);
+        $unassignIds = $request->input('unassign_ids', []);
+
         if (!empty($assignIds)) {
-            Question::whereIn('id', $assignIds)
-                ->where('moderator_id', Auth::id())
-                ->whereNull('exam_id')
-                ->update(['exam_id' => $exam->id]);
+            $exam->questions()->syncWithoutDetaching($assignIds);
         }
 
-        $unassignIds = $request->input('unassign_ids', []);
         if (!empty($unassignIds)) {
-            Question::whereIn('id', $unassignIds)
-                ->where('exam_id', $exam->id)
-                ->update(['exam_id' => null]);
+            $exam->questions()->detach($unassignIds);
         }
 
         return redirect()
@@ -165,27 +142,41 @@ class ExamController extends Controller
 
     public function assignQuestions(Request $request, Exam $exam)
     {
-        $this->authorize('assignQuestions', $exam);
+        $this->authorizeExam($exam);
 
-        $validated = $request->validate([
+        $request->validate([
             'question_ids' => 'required|array',
-            'question_ids.*' => 'exists:questions,id,district_id,' . $exam->district_id,
+            'question_ids.*' => 'exists:questions,id',
         ]);
 
-        Question::whereIn('id', $validated['question_ids'])
-            ->where('district_id', $exam->district_id)
-            ->update(['exam_id' => $exam->id]);
+        $exam->questions()->syncWithoutDetaching($request->question_ids);
 
-        return back()->with('success', 'Questions assigned successfully!');
+        return redirect()->back()->with('success', 'Questions assigned!');
+    }
+
+    public function unassignQuestions(Request $request, Exam $exam)
+    {
+        $this->authorizeExam($exam);
+
+        $request->validate([
+            'question_ids' => 'required|array',
+            'question_ids.*' => 'exists:questions,id',
+        ]);
+
+        $exam->questions()->detach($request->question_ids);
+
+        return redirect()->back()->with('success', 'Questions unassigned!');
     }
 
     public function unassign(Exam $exam, Question $question): RedirectResponse
     {
-        if ($exam->moderator_id !== Auth::id() || $question->moderator_id !== Auth::id()) {
+        $this->authorizeExam($exam);
+
+        if ($question->moderator_id !== Auth::id()) {
             abort(403);
         }
 
-        $question->update(['exam_id' => null]);
+        $exam->questions()->detach($question->id);
 
         return redirect()
             ->route('moderator.exams.questions', ['exam' => $exam->id])
@@ -194,33 +185,33 @@ class ExamController extends Controller
 
     public function createQuestion(Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         return view('moderator.exams.questions.create', compact('exam'));
     }
 
     public function storeQuestion(Request $request, Exam $exam)
     {
-        if ($exam->moderator_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeExam($exam);
 
         $validated = $request->validate([
-            'content'   => 'required|string',
-            'option_a'  => 'required|string',
-            'option_b'  => 'required|string',
-            'option_c'  => 'required|string',
-            'option_d'  => 'required|string',
-            'correct'   => 'required|in:A,B,C,D',
-            'marks'     => 'required|numeric|min:0',
+            'question_text' => 'required|string',
+            'option_a'      => 'required|string',
+            'option_b'      => 'required|string',
+            'option_c'      => 'required|string',
+            'option_d'      => 'required|string',
+            'correct_option'=> 'required|in:A,B,C,D',
+            'marks'         => 'required|numeric|min:0',
         ]);
 
-        $exam->questions()->create(array_merge($validated, [
+        $question = new Question(array_merge($validated, [
             'moderator_id' => Auth::id(),
-            'status'       => 'approved',
+            'district_id'  => $exam->district_id,
+            'status'       => Question::STATUS_APPROVED,
         ]));
+
+        $question->save();
+        $exam->questions()->attach($question->id);
 
         return redirect()->route('moderator.exams.questions', ['exam' => $exam->id])
             ->with('success', 'Question added to exam.');
@@ -230,18 +221,34 @@ class ExamController extends Controller
     {
         $this->authorize('selectQuestions', $exam);
 
-        // Get unassigned questions
         $unassignedQuestions = Question::where('district_id', $exam->district_id)
-            ->whereNull('exam_id')
+            ->whereDoesntHave('exams')
             ->get();
 
-        // Get assigned questions for this exam
         $assignedQuestions = $exam->questions()->get();
 
-        return view('moderator.exams.select_questions', [
-            'exam' => $exam,
-            'unassignedQuestions' => $unassignedQuestions,
-            'assignedQuestions' => $assignedQuestions,
-        ]);
+        return view('moderator.exams.select_questions', compact(
+            'exam',
+            'unassignedQuestions',
+            'assignedQuestions'
+        ));
+    }
+
+    public function showQuestionAssignment(Exam $exam)
+    {
+        $assignedQuestions = $exam->questions;
+
+        $unassignedQuestions = Question::whereDoesntHave('exams', function ($query) use ($exam) {
+            $query->where('exam_id', $exam->id);
+        })->get();
+
+        return view('moderator.exams.select_questions', compact('exam', 'assignedQuestions', 'unassignedQuestions'));
+    }
+
+    protected function authorizeExam(Exam $exam)
+    {
+        if ($exam->moderator_id !== Auth::id()) {
+            abort(403);
+        }
     }
 }
