@@ -30,6 +30,23 @@
                 <p class="text-center text-indigo-100 mt-2">
                     Access and continue your assessments.
                 </p>
+
+                <!-- Upcoming Applications -->
+                @if($openExams->count())
+                    <div class="mt-6 bg-white/10 backdrop-blur-sm p-4 rounded-xl text-sm text-white">
+                        <h4 class="text-white font-semibold mb-2">Upcoming Applications</h4>
+                        @foreach($openExams as $exam)
+                            <div class="flex items-center justify-between bg-white/20 px-3 py-2 rounded mb-2">
+                                <span>{{ $exam->name }}</span>
+                                @if($exam->canApply())
+                                    <button class="text-xs bg-white text-indigo-700 font-medium px-3 py-1 rounded hover:bg-gray-100 transition">
+                                        Apply Now
+                                    </button>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </a>
 
             <!-- View Results -->

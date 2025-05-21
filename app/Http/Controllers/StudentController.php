@@ -12,11 +12,15 @@ use Illuminate\Support\Facades\Auth;
 class StudentController extends Controller
 {
     /**
-     * Show the student dashboard.
+     * Show the student dashboard with upcoming exams.
      */
     public function dashboard()
     {
-        return view('student.dashboard');
+        $openExams = Exam::where('application_start', '<=', now())
+            ->where('application_end', '>=', now())
+            ->get();
+
+        return view('student.dashboard', compact('openExams'));
     }
 
     /**
@@ -34,6 +38,15 @@ class StudentController extends Controller
             ->get();
 
         return view('student.exams', compact('districts', 'exams', 'selectedDistrict'));
+    }
+
+    /**
+     * Apply for an exam (adds exam to student's applied exams).
+     */
+    public function apply(Exam $exam)
+    {
+        auth()->user()->appliedExams()->syncWithoutDetaching([$exam->id]);
+        return back()->with('success', 'Application submitted!');
     }
 
     /**
@@ -66,12 +79,12 @@ class StudentController extends Controller
     }
 
     /**
-     * View a specific exam's detail (with access control).
+     * View a specific exam's detail (basic district check).
      */
     public function viewExam(Exam $exam)
     {
-        if (!Auth::user()->hasRole('student') || Auth::user()->district_id !== $exam->district_id) {
-            abort(403);
+        if (Auth::user()->district_id !== $exam->district_id) {
+            abort(403, 'You are not authorized to view this exam.');
         }
 
         return view('student.exams.view', compact('exam'));

@@ -97,7 +97,6 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
     });
 
     Route::post('/assign-questions', [ExamController::class, 'assignQuestionsToExam'])->name('assign.questions');
-
     Route::delete('/questions/{question}', [ExamController::class, 'destroyQuestion'])->name('questions.destroy');
 
     // Review Questions
@@ -142,6 +141,11 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
         Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view')->middleware('can:view,exam');
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
     });
+
+    // ✅ New Exam Apply Route
+    Route::post('/exams/{exam}/apply', [StudentController::class, 'apply'])
+        ->name('exams.apply')
+        ->middleware(['auth', 'role:student']);
 
     Route::prefix('results')->name('results.')->group(function () {
         Route::get('/', [StudentController::class, 'resultIndex'])->name('index');

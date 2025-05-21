@@ -161,4 +161,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Result::class);
     }
+
+    /**
+     * Exams the student has applied to
+     */
+    public function appliedExams()
+    {
+        return $this->belongsToMany(Exam::class)->withTimestamps();
+    }
 }

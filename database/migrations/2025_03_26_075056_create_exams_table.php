@@ -15,10 +15,21 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('duration'); // in minutes
-            $table->timestamp('start_time');
-            $table->timestamp('end_time')->nullable();
+            $table->integer('duration'); // Duration in minutes
+
+            // Consolidated application and exam scheduling fields
+            $table->dateTime('application_start');
+            $table->dateTime('application_end');
+            $table->dateTime('exam_start');
+
+            // Foreign keys
             $table->foreignId('moderator_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('district_id')->nullable()->constrained();
+
+            // Additional status fields
+            $table->string('status')->default('draft');
+            $table->boolean('is_active')->default(true);
+
             $table->timestamps();
         });
     }

@@ -34,18 +34,20 @@ class ExamController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'duration'    => 'required|integer|min:1',
-            'start_time'  => 'required|date|after:now',
-            'end_time'    => 'nullable|date|after:start_time',
+            'name'               => 'required|string|max:255',
+            'description'        => 'nullable|string',
+            'duration'           => 'required|integer|min:1', // Confirmed integer validation
+            'application_start'  => 'required|date|after:now',
+            'application_end'    => 'required|date|after:application_start',
+            'exam_start'         => 'required|date|after:application_end',
         ]);
 
-        $exam = Exam::create([
+        Exam::create([
             ...$validated,
             'moderator_id' => Auth::id(),
             'district_id'  => Auth::user()->district_id,
             'status'       => 'draft',
+            'is_active'    => true,
         ]);
 
         return redirect()->route('moderator.exams.index')->with('success', 'Exam created!');
@@ -54,7 +56,6 @@ class ExamController extends Controller
     public function destroy(Exam $exam)
     {
         $this->authorizeExam($exam);
-
         $exam->questions()->detach();
         $exam->delete();
 
@@ -64,7 +65,6 @@ class ExamController extends Controller
     public function viewExamQuestions(Exam $exam)
     {
         $this->authorizeExam($exam);
-
         $exam->load(['questions.paperSetter', 'pendingQuestions']);
 
         return view('moderator.exams.questions.index', compact('exam'));
@@ -74,7 +74,6 @@ class ExamController extends Controller
     {
         $moderator = Auth::user();
         $exams = Exam::where('moderator_id', $moderator->id)->get();
-
         $selectedExam = null;
         $availableQuestions = collect();
 
@@ -195,13 +194,13 @@ class ExamController extends Controller
         $this->authorizeExam($exam);
 
         $validated = $request->validate([
-            'question_text' => 'required|string',
-            'option_a'      => 'required|string',
-            'option_b'      => 'required|string',
-            'option_c'      => 'required|string',
-            'option_d'      => 'required|string',
-            'correct_option'=> 'required|in:A,B,C,D',
-            'marks'         => 'required|numeric|min:0',
+            'question_text'  => 'required|string',
+            'option_a'       => 'required|string',
+            'option_b'       => 'required|string',
+            'option_c'       => 'required|string',
+            'option_d'       => 'required|string',
+            'correct_option' => 'required|in:A,B,C,D',
+            'marks'          => 'required|numeric|min:0',
         ]);
 
         $question = new Question(array_merge($validated, [

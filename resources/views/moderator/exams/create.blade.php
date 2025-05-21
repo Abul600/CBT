@@ -32,27 +32,43 @@
                         <textarea name="description" id="description" rows="3" class="w-full border-gray-300 rounded p-2">{{ old('description') }}</textarea>
                     </div>
 
+                    <!-- Application Start -->
                     <div class="mb-4">
-                        <label for="duration" class="block font-semibold">Duration (minutes)</label>
-                        <input type="number" name="duration" id="duration" value="{{ old('duration') }}" class="w-full border-gray-300 rounded p-2" min="1">
+                        <label for="application_start" class="block font-semibold">Application Start Date</label>
+                        <input type="datetime-local" name="application_start" id="application_start"
+                               value="{{ old('application_start') }}"
+                               class="w-full border-gray-300 rounded p-2" required>
                     </div>
 
+                    <!-- Application End -->
                     <div class="mb-4">
-                        <label for="start_time" class="block font-semibold">Start Time</label>
-                        <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time') }}" class="w-full border-gray-300 rounded p-2">
+                        <label for="application_end" class="block font-semibold">Application End Date</label>
+                        <input type="datetime-local" name="application_end" id="application_end"
+                               value="{{ old('application_end') }}"
+                               class="w-full border-gray-300 rounded p-2" required>
                     </div>
 
+                    <!-- Exam Start -->
                     <div class="mb-4">
-                        <label for="end_time" class="block font-semibold">End Time</label>
-                        <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}" class="w-full border-gray-300 rounded p-2">
+                        <label for="exam_start" class="block font-semibold">Exam Date & Time</label>
+                        <input type="datetime-local" name="exam_start" id="exam_start"
+                               value="{{ old('exam_start') }}"
+                               class="w-full border-gray-300 rounded p-2" required>
+                        <small class="text-gray-500">Students can join 10 minutes before this time</small>
                     </div>
 
+                    <!-- Exam Duration -->
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="district_id">
-                            District (Optional)
-                        </label>
+                        <label for="duration" class="block font-semibold">Exam Duration (Minutes)</label>
+                        <input type="number" name="duration" id="duration" value="{{ old('duration') }}"
+                               class="w-full border-gray-300 rounded p-2" min="1" required>
+                    </div>
+
+                    <!-- District Selection -->
+                    <div class="mb-4">
+                        <label for="district_id" class="block font-semibold">District (Optional)</label>
                         <select name="district_id" id="district_id"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight">
+                                class="w-full border-gray-300 rounded p-2">
                             <option value="">-- No District --</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
