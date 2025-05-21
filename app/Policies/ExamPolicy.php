@@ -71,4 +71,12 @@ class ExamPolicy
                $user->id === $exam->moderator_id &&
                $user->district_id === $exam->district_id;
     }
+
+    /**
+     * Determine whether the student can take a mock exam.
+     */
+    public function takeMock(User $user, Exam $exam)
+    {
+        return $user->hasRole('student') && $exam->type === 'mock';
+    }
 }

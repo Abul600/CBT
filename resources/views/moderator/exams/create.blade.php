@@ -22,39 +22,53 @@
                 <form action="{{ route('moderator.exams.store') }}" method="POST">
                     @csrf
 
+                    <!-- Exam Name -->
                     <div class="mb-4">
                         <label for="name" class="block font-semibold">Exam Name</label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" class="w-full border-gray-300 rounded p-2" required>
                     </div>
 
+                    <!-- Description -->
                     <div class="mb-4">
                         <label for="description" class="block font-semibold">Description</label>
                         <textarea name="description" id="description" rows="3" class="w-full border-gray-300 rounded p-2">{{ old('description') }}</textarea>
                     </div>
 
-                    <!-- Application Start -->
+                    <!-- Exam Type -->
                     <div class="mb-4">
-                        <label for="application_start" class="block font-semibold">Application Start Date</label>
-                        <input type="datetime-local" name="application_start" id="application_start"
-                               value="{{ old('application_start') }}"
-                               class="w-full border-gray-300 rounded p-2" required>
+                        <label for="type" class="block font-semibold">Exam Type</label>
+                        <select name="type" id="examType" class="w-full border-gray-300 rounded p-2" required>
+                            <option value="scheduled" {{ old('type') == 'scheduled' ? 'selected' : '' }}>Scheduled Exam</option>
+                            <option value="mock" {{ old('type') == 'mock' ? 'selected' : '' }}>Mock Test</option>
+                        </select>
                     </div>
 
-                    <!-- Application End -->
-                    <div class="mb-4">
-                        <label for="application_end" class="block font-semibold">Application End Date</label>
-                        <input type="datetime-local" name="application_end" id="application_end"
-                               value="{{ old('application_end') }}"
-                               class="w-full border-gray-300 rounded p-2" required>
-                    </div>
+                    <!-- Scheduled Exam Fields -->
+                    <div id="scheduledFields" style="display: none;">
+                        <!-- Application Start -->
+                        <div class="mb-4">
+                            <label for="application_start" class="block font-semibold">Application Start Date</label>
+                            <input type="datetime-local" name="application_start" id="application_start"
+                                   value="{{ old('application_start') }}"
+                                   class="w-full border-gray-300 rounded p-2">
+                        </div>
 
-                    <!-- Exam Start -->
-                    <div class="mb-4">
-                        <label for="exam_start" class="block font-semibold">Exam Date & Time</label>
-                        <input type="datetime-local" name="exam_start" id="exam_start"
-                               value="{{ old('exam_start') }}"
-                               class="w-full border-gray-300 rounded p-2" required>
-                        <small class="text-gray-500">Students can join 10 minutes before this time</small>
+                        <!-- Application End -->
+                        <div class="mb-4">
+                            <label for="application_end" class="block font-semibold">Application End Date</label>
+                            <input type="datetime-local" name="application_end" id="application_end"
+                                   value="{{ old('application_end') }}"
+                                   class="w-full border-gray-300 rounded p-2">
+                        </div>
+
+                        <!-- Exam Start -->
+                        <div class="mb-4">
+                            <label for="exam_start" class="block font-semibold">Exam Date & Time</label>
+                            <input type="datetime-local" name="exam_start" id="exam_start"
+                                   value="{{ old('exam_start') }}"
+                                   class="w-full border-gray-300 rounded p-2">
+                            <small class="text-gray-500">Students can join 10 minutes before this time</small>
+                        </div>
                     </div>
 
                     <!-- Exam Duration -->
@@ -86,4 +100,19 @@
             </div>
         </div>
     </div>
+
+    <!-- JS to toggle scheduled fields -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const examType = document.getElementById('examType');
+            const scheduledFields = document.getElementById('scheduledFields');
+
+            function toggleScheduledFields() {
+                scheduledFields.style.display = examType.value === 'scheduled' ? 'block' : 'none';
+            }
+
+            examType.addEventListener('change', toggleScheduledFields);
+            toggleScheduledFields(); // Call on page load
+        });
+    </script>
 </x-app-layout>

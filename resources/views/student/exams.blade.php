@@ -26,49 +26,53 @@
                 <div class="bg-white border border-gray-200 p-6 rounded-lg shadow">
                     <h3 class="text-xl font-semibold">{{ $exam->name }}</h3>
                     <p class="mt-2"><strong>District:</strong> {{ $exam->district->name ?? 'N/A' }}</p>
-                    <p class="mt-2"><strong>Start Time:</strong> 
-                        {{ $exam->exam_start ? $exam->exam_start->format('d M Y, h:i A') : 'Not scheduled' }}
+                    <p class="mt-2"><strong>Type:</strong>
+                        @if($exam->type === 'mock')
+                            <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">Mock Test</span>
+                        @else
+                            <span class="inline-block bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full">Scheduled Exam</span>
+                        @endif
                     </p>
                     <p class="mt-1"><strong>Duration:</strong> {{ $exam->duration }} minutes</p>
+                    @if($exam->type === 'scheduled')
+                        <p class="mt-2"><strong>Start Time:</strong>
+                            {{ $exam->exam_start ? $exam->exam_start->format('d M Y, h:i A') : 'Not scheduled' }}
+                        </p>
+                    @endif
 
-                    <!-- ✅ Application Status Badge -->
+                    <!-- Status & Application Section -->
                     <div class="mt-4">
-                        @if($exam->canApply())
-                            <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
-                                Open for Application
-                            </span>
+                        @if($exam->type === 'mock')
+                            <!-- Mock Exam - Can start anytime -->
+                            <a href="{{ route('exams.mock.start', $exam) }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Start Now
+                            </a>
                         @else
-                            <span class="inline-block bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full">
-                                Applications Closed ({{ $exam->application_end->format('M j, Y H:i') }})
-                            </span>
-                        @endif
-                    </div>
-
-                    <!-- Application Logic -->
-                    <div class="mt-4">
-                        @if($exam->canApply())
-                            <form method="POST" action="{{ route('student.exam.apply', $exam) }}">
-                                @csrf
-                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                                    Apply Now
+                            <!-- Scheduled Exam -->
+                            @if($exam->canApply())
+                                <form method="POST" action="{{ route('student.exam.apply', $exam) }}">
+                                    @csrf
+                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                        Apply Now
+                                    </button>
+                                </form>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Apply before {{ $exam->application_end->format('d M Y, h:i A') }}
+                                </p>
+                            @elseif(auth()->user()->appliedExams->contains($exam))
+                                <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
+                                    Applied ✓
                                 </button>
-                            </form>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Apply before {{ $exam->application_end->format('d M Y, h:i A') }}
-                            </p>
-                        @elseif(auth()->user()->appliedExams->contains($exam))
-                            <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
-                                Applied ✓
-                            </button>
-                        @else
-                            <p class="text-sm text-red-600 font-medium">Applications closed</p>
+                            @else
+                                <p class="text-sm text-red-600 font-medium">Applications closed ({{ $exam->application_end->format('d M Y, h:i A') }})</p>
+                            @endif
+
+                            <!-- View/Start Button -->
+                            <a href="{{ route('student.exams.view', $exam) }}" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                View Exam
+                            </a>
                         @endif
                     </div>
-
-                    <!-- Start Exam Link -->
-                    <a href="{{ route('student.exams.view', $exam) }}" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        Start Exam
-                    </a>
                 </div>
             @endforeach
         </div>

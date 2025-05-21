@@ -7,9 +7,22 @@
 
         <div class="mb-4">
             <strong>Duration:</strong> {{ $exam->duration }} minutes<br>
-            <strong>Application Period:</strong> {{ $exam->application_start->format('d M Y, h:i A') }} - {{ $exam->application_end->format('d M Y, h:i A') }}<br>
-            <strong>Exam Start:</strong> {{ $exam->exam_start->format('d M Y, h:i A') }}<br>
-            <strong>Exam End:</strong> {{ $exam->exam_end->format('d M Y, h:i A') }}
+
+            @if($exam->type === 'scheduled')
+                <strong>Application Period:</strong>
+                @if ($exam->application_start && $exam->application_end)
+                    {{ $exam->application_start->format('d M Y, h:i A') }} - {{ $exam->application_end->format('d M Y, h:i A') }}
+                @else
+                    <em>Application period not set</em>
+                @endif
+                <br>
+            @endif
+
+            <strong>Exam Start:</strong> 
+            {{ $exam->exam_start ? $exam->exam_start->format('d M Y, h:i A') : 'Not specified' }}<br>
+
+            <strong>Exam End:</strong> 
+            {{ $exam->exam_end ? $exam->exam_end->format('d M Y, h:i A') : 'Not specified' }}
         </div>
 
         @auth

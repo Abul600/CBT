@@ -29,6 +29,7 @@ class Exam extends Model
         'district_id',
         'status',
         'is_active',
+        'type',
     ];
 
     // ====== Attribute Casting ======
@@ -38,53 +39,36 @@ class Exam extends Model
         'exam_start'        => 'datetime',
         'duration'          => 'integer',
         'is_active'         => 'boolean',
+        'type'              => 'string',
     ];
 
     // ====== Relationships ======
 
-    /**
-     * Questions assigned to this exam (many-to-many).
-     */
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(Question::class, 'exam_question');
     }
 
-    /**
-     * Pending questions only.
-     */
     public function pendingQuestions(): BelongsToMany
     {
         return $this->questions()->where('status', Question::STATUS_PENDING);
     }
 
-    /**
-     * Approved questions only.
-     */
     public function approvedQuestions(): BelongsToMany
     {
         return $this->questions()->where('status', Question::STATUS_APPROVED);
     }
 
-    /**
-     * The moderator that created the exam.
-     */
     public function moderator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'moderator_id');
     }
 
-    /**
-     * The district the exam belongs to.
-     */
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);
     }
 
-    /**
-     * Users who have applied for this exam (many-to-many).
-     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
@@ -92,12 +76,14 @@ class Exam extends Model
 
     // ====== Accessors ======
 
-    /**
-     * Get calculated exam end time with type safety.
-     */
     public function getExamEndAttribute(): ?Carbon
     {
         return $this->exam_start?->copy()->addMinutes((int) $this->duration);
+    }
+
+    public function getIsMockAttribute(): bool
+    {
+        return $this->type === 'mock';
     }
 
     // ====== Scopes ======
@@ -144,6 +130,8 @@ class Exam extends Model
 
     public function canApply(): bool
     {
+        if ($this->type === 'mock') return false;
+
         if (!$this->application_start || !$this->application_end) {
             return false;
         }
@@ -156,15 +144,14 @@ class Exam extends Model
 
     public function canJoinExam(): bool
     {
+        if ($this->type === 'mock') return true;
+
         return now()->between(
             $this->exam_start->copy()->subMinutes(10),
             $this->exam_end
         );
     }
 
-    /**
-     * Check if the given (or current) user has applied for this exam.
-     */
     public function hasApplied(User $user = null): bool
     {
         $user = $user ?? auth()->user();

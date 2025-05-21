@@ -139,29 +139,36 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [StudentController::class, 'examIndex'])->name('index');
         Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view')->middleware('can:view,exam');
+        Route::get('/{exam}/start', [StudentController::class, 'startExam'])->name('start'); // ✅ Added route
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
-    });
-
-    // ✅ New Exam Apply Route
-    Route::post('/exams/{exam}/apply', [StudentController::class, 'apply'])
-        ->name('exams.apply')
-        ->middleware(['auth', 'role:student']);
-
-    Route::prefix('results')->name('results.')->group(function () {
-        Route::get('/', [StudentController::class, 'resultIndex'])->name('index');
-        Route::get('/{exam}', [StudentController::class, 'viewResult'])->name('view');
+        Route::post('/{exam}/apply', [StudentController::class, 'apply'])->name('apply');
     });
 
     Route::get('/take-exam', [StudentController::class, 'takeExam'])->name('take.exam');
     Route::get('/view-results', [StudentController::class, 'viewResults'])->name('view.results');
     Route::get('/study-materials', [StudentController::class, 'studyMaterials'])->name('study.materials');
     Route::get('/search', [StudentController::class, 'search'])->name('search');
+
+    Route::prefix('results')->name('results.')->group(function () {
+        Route::get('/', [StudentController::class, 'resultIndex'])->name('index');
+        Route::get('/{exam}', [StudentController::class, 'viewResult'])->name('view');
+    });
 });
 
 /*
 |--------------------------------------------------------------------------
-| Moderator Activation Routes
+| Moderator Activation Routes (Public)
 |--------------------------------------------------------------------------
 */
 Route::get('/moderators/activate/{id}', [ModeratorController::class, 'activate'])->name('moderator.activate');
 Route::get('/moderators/deactivate/{id}', [ModeratorController::class, 'deactivate'])->name('moderator.deactivate');
+
+/*
+|--------------------------------------------------------------------------
+| Additional Routes
+|--------------------------------------------------------------------------
+*/
+// ✅ Route for Mock Exams (Public route, separately handled for guest/mock use)
+Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
+    ->name('exams.mock.start')
+    ->middleware(['auth', 'role:student']);

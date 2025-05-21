@@ -7,6 +7,7 @@ use App\Models\{Exam, Question, District};
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ExamController extends Controller
 {
@@ -33,21 +34,48 @@ class ExamController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name'               => 'required|string|max:255',
-            'description'        => 'nullable|string',
-            'duration'           => 'required|integer|min:1', // Confirmed integer validation
-            'application_start'  => 'required|date|after:now',
-            'application_end'    => 'required|date|after:application_start',
-            'exam_start'         => 'required|date|after:application_end',
-        ]);
+        $rules = [
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:mock,scheduled',
+            'description' => 'nullable|string',
+            'duration' => 'required|integer|min:1',
+            'district_id' => 'nullable|exists:districts,id',
+        ];
+
+        if ($request->type === 'scheduled') {
+            $rules += [
+                'application_start' => 'required|date|after:now',
+                'application_end' => 'required|date|after:application_start',
+                'exam_start' => 'required|date|after:application_end',
+            ];
+        } else {
+            // For mock exams, these fields should not be required
+            $rules += [
+                'application_start' => 'nullable|date',
+                'application_end' => 'nullable|date',
+                'exam_start' => 'nullable|date',
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        $districtId = $validated['district_id'] ?? Auth::user()->district_id;
 
         Exam::create([
-            ...$validated,
+            'name' => $validated['name'],
+            'type' => $validated['type'],
+            'description' => $validated['description'] ?? null,
+            'duration' => $validated['duration'],
             'moderator_id' => Auth::id(),
-            'district_id'  => Auth::user()->district_id,
-            'status'       => 'draft',
-            'is_active'    => true,
+            'district_id' => $districtId,
+            'application_start' => $validated['application_start'] ?? null,
+            'application_end' => $validated['application_end'] ?? null,
+            'exam_start' => $validated['exam_start'] ?? null,
+            'exam_end' => $validated['type'] === 'scheduled'
+                ? Carbon::parse($validated['exam_start'])->addMinutes($validated['duration'])
+                : null,
+            'status' => 'draft',
+            'is_active' => true,
         ]);
 
         return redirect()->route('moderator.exams.index')->with('success', 'Exam created!');

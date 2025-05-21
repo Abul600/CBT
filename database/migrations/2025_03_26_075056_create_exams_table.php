@@ -17,10 +17,11 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('duration'); // Duration in minutes
 
-            // Consolidated application and exam scheduling fields
-            $table->dateTime('application_start');
-            $table->dateTime('application_end');
-            $table->dateTime('exam_start');
+            // Application and exam scheduling fields (nullable for mock exams)
+            $table->dateTime('application_start')->nullable();
+            $table->dateTime('application_end')->nullable();
+            $table->dateTime('exam_start')->nullable();
+            $table->dateTime('exam_end')->nullable();
 
             // Foreign keys
             $table->foreignId('moderator_id')->constrained('users')->onDelete('cascade');

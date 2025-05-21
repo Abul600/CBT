@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class StudentController extends Controller
 {
     /**
-     * Show the student dashboard with upcoming exams.
+     * Show the student dashboard with open exams.
      */
     public function dashboard()
     {
@@ -24,7 +24,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Show a list of available exams to take (with optional district filtering).
+     * Show a list of available exams (with optional district filter).
      */
     public function takeExam(Request $request)
     {
@@ -41,7 +41,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Apply for an exam (adds exam to student's applied exams).
+     * Apply for an exam.
      */
     public function apply(Exam $exam)
     {
@@ -59,7 +59,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Display available study materials (no policy applied).
+     * Display all study materials.
      */
     public function studyMaterials()
     {
@@ -68,7 +68,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Search questions based on a query string.
+     * Search questions based on content.
      */
     public function search(Request $request)
     {
@@ -79,15 +79,36 @@ class StudentController extends Controller
     }
 
     /**
-     * View a specific exam's detail (basic district check).
+     * View a specific exam.
      */
     public function viewExam(Exam $exam)
     {
-        if (Auth::user()->district_id !== $exam->district_id) {
-            abort(403, 'You are not authorized to view this exam.');
+        return view('student.exams.view', compact('exam'));
+    }
+
+    /**
+     * Start a mock exam (mock exams only).
+     */
+    public function startMockExam(Exam $exam)
+    {
+        if (!$exam->is_mock) {
+            abort(403, 'This is not a mock test.');
         }
 
-        return view('student.exams.view', compact('exam'));
+        return view('student.exam-view', compact('exam'));
+    }
+
+    /**
+     * Start a scheduled or mock exam (general handler).
+     */
+    public function startExam(Exam $exam)
+    {
+        // Optional: Check if the student has applied for this exam if it's not a mock
+        if (!$exam->is_mock && !auth()->user()->appliedExams->contains($exam->id)) {
+            return redirect()->route('student.exams.index')->with('error', 'You must apply to the exam first.');
+        }
+
+        return view('student.exam-take', compact('exam'));
     }
 
     /**
@@ -100,7 +121,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Display a specific exam result.
+     * View a specific exam result.
      */
     public function viewResult(Exam $exam)
     {
