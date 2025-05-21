@@ -32,7 +32,7 @@ class ExamController extends Controller
         return view('moderator.exams.create', compact('districts'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $rules = [
             'name' => 'required|string|max:255',
@@ -49,7 +49,6 @@ class ExamController extends Controller
                 'exam_start' => 'required|date|after:application_end',
             ];
         } else {
-            // For mock exams, these fields should not be required
             $rules += [
                 'application_start' => 'nullable|date',
                 'application_end' => 'nullable|date',
@@ -71,8 +70,8 @@ class ExamController extends Controller
             'application_start' => $validated['application_start'] ?? null,
             'application_end' => $validated['application_end'] ?? null,
             'exam_start' => $validated['exam_start'] ?? null,
-            'exam_end' => $validated['type'] === 'scheduled'
-                ? Carbon::parse($validated['exam_start'])->addMinutes($validated['duration'])
+            'exam_end' => $validated['type'] === 'scheduled' && $validated['exam_start']
+                ? Carbon::parse($validated['exam_start'])->addMinutes((int) $validated['duration'])
                 : null,
             'status' => 'draft',
             'is_active' => true,
@@ -81,7 +80,7 @@ class ExamController extends Controller
         return redirect()->route('moderator.exams.index')->with('success', 'Exam created!');
     }
 
-    public function destroy(Exam $exam)
+    public function destroy(Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
         $exam->questions()->detach();
@@ -110,7 +109,7 @@ class ExamController extends Controller
 
             if ($selectedExam) {
                 $availableQuestions = Question::whereDoesntHave('exams')
-                    ->where('sent_to_moderator_id', $moderator->id)
+                    ->where('moderator_id', $moderator->id)
                     ->get();
             }
         }
@@ -147,7 +146,7 @@ class ExamController extends Controller
         return view('moderator.exams.manage_questions', compact('exam', 'assignedQuestions', 'availableQuestions'));
     }
 
-    public function assignOrUnassign(Request $request, Exam $exam)
+    public function assignOrUnassign(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
 
@@ -167,7 +166,7 @@ class ExamController extends Controller
             ->with('success', 'Question assignments updated.');
     }
 
-    public function assignQuestions(Request $request, Exam $exam)
+    public function assignQuestions(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
 
@@ -181,7 +180,7 @@ class ExamController extends Controller
         return redirect()->back()->with('success', 'Questions assigned!');
     }
 
-    public function unassignQuestions(Request $request, Exam $exam)
+    public function unassignQuestions(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
 
@@ -217,7 +216,7 @@ class ExamController extends Controller
         return view('moderator.exams.questions.create', compact('exam'));
     }
 
-    public function storeQuestion(Request $request, Exam $exam)
+    public function storeQuestion(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
 
@@ -246,7 +245,7 @@ class ExamController extends Controller
 
     public function selectQuestions(Exam $exam)
     {
-        $this->authorize('selectQuestions', $exam);
+        $this->authorizeExam($exam);
 
         $unassignedQuestions = Question::where('district_id', $exam->district_id)
             ->whereDoesntHave('exams')
@@ -272,7 +271,7 @@ class ExamController extends Controller
         return view('moderator.exams.select_questions', compact('exam', 'assignedQuestions', 'unassignedQuestions'));
     }
 
-    protected function authorizeExam(Exam $exam)
+    protected function authorizeExam(Exam $exam): void
     {
         if ($exam->moderator_id !== Auth::id()) {
             abort(403);
