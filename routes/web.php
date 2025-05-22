@@ -83,15 +83,17 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
         Route::get('/{exam}/questions/view', [ExamController::class, 'viewQuestions'])->name('questions.view');
         Route::get('/{exam}/questions/create', [ExamController::class, 'createQuestion'])->name('questions.create');
         Route::post('/{exam}/questions', [ExamController::class, 'storeQuestion'])->name('questions.store');
-        Route::patch('/{exam}/questions/{question}/unassign', [ExamController::class, 'unassign'])->name('unassign_question');
+        Route::patch('/{exam}/questions/{question}/unassign', [ExamController::class, 'unassign'])
+            ->name('unassign_question')
+            ->middleware('can:modifyQuestions,exam');
 
         Route::post('/{exam}/assign-questions', [ExamController::class, 'assignQuestions'])
             ->name('assign-questions')
-            ->middleware('can:assignQuestions,exam');
+            ->middleware('can:modifyQuestions,exam');
 
         Route::post('/{exam}/unassign-questions', [ExamController::class, 'unassignQuestions'])
             ->name('unassign-questions')
-            ->middleware('can:assignQuestions,exam');
+            ->middleware('can:modifyQuestions,exam');
 
         // ✅ Release Exam Route
         Route::post('/{exam}/release', [ExamController::class, 'release'])->name('release');

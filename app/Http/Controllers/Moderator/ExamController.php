@@ -149,6 +149,10 @@ class ExamController extends Controller
     {
         $this->authorizeExam($exam);
 
+        if ($exam->is_released) {
+            return back()->withErrors(['exam' => 'Cannot modify questions after exam release']);
+        }
+
         $assignIds = $request->input('assign_ids', []);
         $unassignIds = $request->input('unassign_ids', []);
 
@@ -169,6 +173,10 @@ class ExamController extends Controller
     {
         $this->authorizeExam($exam);
 
+        if ($exam->is_released) {
+            return back()->withErrors(['exam' => 'Cannot modify questions after exam release']);
+        }
+
         $request->validate([
             'question_ids' => 'required|array',
             'question_ids.*' => 'exists:questions,id',
@@ -183,6 +191,10 @@ class ExamController extends Controller
     {
         $this->authorizeExam($exam);
 
+        if ($exam->is_released) {
+            return back()->withErrors(['exam' => 'Cannot modify questions after exam release']);
+        }
+
         $request->validate([
             'question_ids' => 'required|array',
             'question_ids.*' => 'exists:questions,id',
@@ -196,6 +208,10 @@ class ExamController extends Controller
     public function unassign(Exam $exam, Question $question): RedirectResponse
     {
         $this->authorizeExam($exam);
+
+        if ($exam->is_released) {
+            return back()->withErrors(['exam' => 'Cannot unassign after exam release']);
+        }
 
         if ($question->moderator_id !== Auth::id()) {
             abort(403);
@@ -218,6 +234,10 @@ class ExamController extends Controller
     public function storeQuestion(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExam($exam);
+
+        if ($exam->is_released) {
+            return back()->withErrors(['exam' => 'Cannot add questions after exam release']);
+        }
 
         $validated = $request->validate([
             'question_text'  => 'required|string',

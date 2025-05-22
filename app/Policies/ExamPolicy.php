@@ -79,6 +79,16 @@ class ExamPolicy
     }
 
     /**
+     * Determine whether the user can modify questions (assign/unassign) for the exam.
+     */
+    public function modifyQuestions(User $user, Exam $exam)
+    {
+        return !$exam->is_released &&
+               $user->hasRole('moderator') &&
+               $user->district_id === $exam->district_id;
+    }
+
+    /**
      * Determine whether the student can take a mock exam.
      */
     public function takeMock(User $user, Exam $exam)
