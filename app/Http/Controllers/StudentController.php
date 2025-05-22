@@ -41,8 +41,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Show a list of available exams (with optional district filter).
-     * (Optional redundancy, can be used for separate route)
+     * Alternative route to display exams with optional district filter.
      */
     public function takeExam(Request $request)
     {
@@ -68,12 +67,27 @@ class StudentController extends Controller
     }
 
     /**
-     * View all results for the authenticated student.
+     * Display all results for the authenticated student.
      */
     public function viewResults()
     {
         $results = auth()->user()->results ?? collect();
         return view('student.results', compact('results'));
+    }
+
+    /**
+     * Results index page with completed exams.
+     */
+    public function resultIndex()
+    {
+        $student = auth()->user();
+
+        $results = $student->exams()
+            ->with('questions', 'pivot') // eager load if needed
+            ->wherePivot('status', 'completed') // adjust as per your pivot table
+            ->get();
+
+        return view('student.results.index', compact('results'));
     }
 
     /**
@@ -105,7 +119,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Start a mock exam (mock exams only).
+     * Start a mock exam.
      */
     public function startMockExam(Exam $exam)
     {
@@ -117,7 +131,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Start a scheduled or mock exam (general handler).
+     * Start a scheduled or mock exam.
      */
     public function startExam(Exam $exam)
     {
@@ -125,7 +139,6 @@ class StudentController extends Controller
             return redirect()->route('student.exams.index')->with('error', 'You must apply to the exam first.');
         }
 
-        // Get questions without eager loading options (because options relationship is removed)
         $questions = $exam->questions()->inRandomOrder()->get();
 
         return view('student.exam-take', compact('exam', 'questions'));
@@ -138,7 +151,7 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'answers' => 'required|array',
-            'answers.*' => 'nullable|string', // question id => option key (option_a, option_b, etc.)
+            'answers.*' => 'nullable|string',
         ]);
 
         $answers = $validated['answers'];
@@ -148,12 +161,11 @@ class StudentController extends Controller
         foreach ($answers as $questionId => $selectedOptionKey) {
             $question = Question::find($questionId);
             if ($question && $selectedOptionKey && $selectedOptionKey === $question->correct_option) {
-                $score += $question->marks; // sum marks for correct answers
+                $score += $question->marks;
             }
             $total += $question ? $question->marks : 0;
         }
 
-        // Store result
         Result::updateOrCreate(
             ['user_id' => auth()->id(), 'exam_id' => $exam->id],
             ['score' => $score, 'total' => $total]

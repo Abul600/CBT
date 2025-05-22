@@ -1,87 +1,107 @@
-{{-- resources/views/student/exam-take.blade.php --}}
-
-@extends('layouts.student') {{-- Adjust if your layout file is different --}}
+@extends('layouts.student')
 
 @section('content')
-    <div class="container mt-4">
-        <h1 class="mb-3">Exam: {{ $exam->name }}</h1>
-        <p>{{ $exam->description }}</p>
-
-        <div class="mb-4">
-            <strong>Duration:</strong> {{ $exam->duration }} minutes<br>
-
-            @if($exam->type === 'scheduled')
-                <strong>Scheduled Time:</strong><br>
-                {{ $exam->exam_start ? $exam->exam_start->format('d M Y, h:i A') : 'Not specified' }} - 
-                {{ $exam->exam_end ? $exam->exam_end->format('d M Y, h:i A') : 'Not specified' }}
-            @endif
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>{{ $exam->name }}</h4>
+            <div id="progress" class="text-muted">
+                Question <span id="current-q">1</span> of {{ $exam->questions->count() }}
+            </div>
         </div>
 
-        <form action="{{ route('student.exams.submit', $exam) }}" method="POST">
+        <form action="{{ route('student.exams.submit', $exam) }}" method="POST" id="examForm">
             @csrf
+            <div class="card-body">
+                @foreach($exam->questions as $index => $question)
+                    <div class="question-container" data-question="{{ $index + 1 }}" style="display: {{ $loop->first ? 'block' : 'none' }};">
+                        <div class="mb-4">
+                            <h5>Q{{ $index + 1 }}. {{ $question->question_text }}</h5>
+                        </div>
 
-            @foreach($exam->questions as $index => $question)
-                <div class="mb-4">
-                    <h5>Q{{ $index + 1 }}. {{ $question->question_text }}</h5>
+                        {{-- Descriptive Question --}}
+                        @if($question->type === 'descriptive')
+                            <textarea class="form-control" name="answers[{{ $question->id }}]" rows="5"
+                                      placeholder="Type your answer here (700 characters max)"
+                                      required>{{ old("answers.{$question->id}") }}</textarea>
 
-                    <div class="form-check">
-                        <input 
-                            class="form-check-input" 
-                            type="radio" 
-                            name="answers[{{ $question->id }}]" 
-                            value="option_a" 
-                            id="q{{ $question->id }}_option_a"
-                        >
-                        <label class="form-check-label" for="q{{ $question->id }}_option_a">
-                            {{ $question->option_a }}
-                        </label>
+                        {{-- Multiple Choice Question --}}
+                        @else
+                            @foreach(['a', 'b', 'c', 'd'] as $option)
+                                @php $optionKey = "option_{$option}"; @endphp
+                                @if(!empty($question->$optionKey))
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" 
+                                               name="answers[{{ $question->id }}]" 
+                                               value="{{ $option }}" 
+                                               id="q{{ $question->id }}_{{ $option }}"
+                                               {{ old("answers.{$question->id}") == $option ? 'checked' : '' }}
+                                               required>
+                                        <label class="form-check-label" for="q{{ $question->id }}_{{ $option }}">
+                                            {{ $question->$optionKey }}
+                                        </label>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @endif
                     </div>
+                @endforeach
+            </div>
 
-                    <div class="form-check">
-                        <input 
-                            class="form-check-input" 
-                            type="radio" 
-                            name="answers[{{ $question->id }}]" 
-                            value="option_b" 
-                            id="q{{ $question->id }}_option_b"
-                        >
-                        <label class="form-check-label" for="q{{ $question->id }}_option_b">
-                            {{ $question->option_b }}
-                        </label>
-                    </div>
-
-                    <div class="form-check">
-                        <input 
-                            class="form-check-input" 
-                            type="radio" 
-                            name="answers[{{ $question->id }}]" 
-                            value="option_c" 
-                            id="q{{ $question->id }}_option_c"
-                        >
-                        <label class="form-check-label" for="q{{ $question->id }}_option_c">
-                            {{ $question->option_c }}
-                        </label>
-                    </div>
-
-                    <div class="form-check">
-                        <input 
-                            class="form-check-input" 
-                            type="radio" 
-                            name="answers[{{ $question->id }}]" 
-                            value="option_d" 
-                            id="q{{ $question->id }}_option_d"
-                        >
-                        <label class="form-check-label" for="q{{ $question->id }}_option_d">
-                            {{ $question->option_d }}
-                        </label>
-                    </div>
-                </div>
-                <hr>
-            @endforeach
-
-            <button type="submit" class="btn btn-success">Submit Exam</button>
+            <div class="card-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" id="prevBtn" disabled>Previous</button>
+                <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+                <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Submit Exam</button>
+            </div>
         </form>
-
-        <a href="{{ route('student.exams.index') }}" class="btn btn-secondary mt-3">Back to Exams</a>
     </div>
+
+    <a href="{{ route('student.exams.index') }}" class="btn btn-link mt-3">Back to Exams</a>
+</div>
+
+<style>
+    .question-container { min-height: 300px; }
+    .form-check-input { transform: scale(1.2); margin-right: 10px; }
+    .form-check-label { font-size: 1rem; }
+    #progress { font-size: 1rem; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentQuestion = 1;
+        const totalQuestions = {{ $exam->questions->count() }};
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const showQuestion = (num) => {
+            document.querySelectorAll('.question-container').forEach((el) => {
+                el.style.display = 'none';
+            });
+            document.querySelector(`[data-question="${num}"]`).style.display = 'block';
+            document.getElementById('current-q').textContent = num;
+
+            prevBtn.disabled = num === 1;
+            nextBtn.style.display = num === totalQuestions ? 'none' : 'inline-block';
+            submitBtn.style.display = num === totalQuestions ? 'inline-block' : 'none';
+        };
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestion < totalQuestions) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 1) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        showQuestion(currentQuestion);
+    });
+</script>
 @endsection

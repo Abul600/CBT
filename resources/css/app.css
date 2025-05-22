@@ -5,3 +5,16 @@
 [x-cloak] {
     display: none;
 }
+.question-container {
+    transition: opacity 0.3s ease;
+}
+
+.mcq-options .form-check {
+    margin-bottom: 1rem;
+    padding-left: 2.5rem;
+}
+
+#progress {
+    font-weight: 500;
+    color: #666;
+}

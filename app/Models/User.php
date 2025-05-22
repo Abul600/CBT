@@ -9,6 +9,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -168,5 +169,14 @@ class User extends Authenticatable
     public function appliedExams()
     {
         return $this->belongsToMany(Exam::class)->withTimestamps();
+    }
+
+    /**
+     * Exams the student has taken or is associated with (many-to-many)
+     */
+    public function exams(): BelongsToMany
+    {
+        return $this->belongsToMany(Exam::class, 'exam_user', 'user_id', 'exam_id')
+                    ->withTimestamps();
     }
 }
