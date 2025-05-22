@@ -6,8 +6,8 @@ use App\Models\Exam;
 use App\Models\Question;
 use App\Models\StudyMaterial;
 use App\Models\District;
+use App\Models\Result;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -24,7 +24,25 @@ class StudentController extends Controller
     }
 
     /**
+     * Display all exams available to the student, with districts for filtering.
+     */
+    public function index(Request $request)
+    {
+        $districts = District::all();
+        $selectedDistrict = $request->query('district');
+
+        $exams = Exam::when($selectedDistrict, function ($query) use ($selectedDistrict) {
+                return $query->where('district_id', $selectedDistrict);
+            })
+            ->where('is_active', true)
+            ->get();
+
+        return view('student.exams.index', compact('exams', 'districts', 'selectedDistrict'));
+    }
+
+    /**
      * Show a list of available exams (with optional district filter).
+     * (Optional redundancy, can be used for separate route)
      */
     public function takeExam(Request $request)
     {
@@ -73,7 +91,7 @@ class StudentController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('query');
-        $results = Question::where('content', 'LIKE', "%{$query}%")->get();
+        $results = Question::where('question_text', 'LIKE', "%{$query}%")->get();
 
         return view('student.search-results', compact('results'));
     }
@@ -103,20 +121,44 @@ class StudentController extends Controller
      */
     public function startExam(Exam $exam)
     {
-        // Optional: Check if the student has applied for this exam if it's not a mock
         if (!$exam->is_mock && !auth()->user()->appliedExams->contains($exam->id)) {
             return redirect()->route('student.exams.index')->with('error', 'You must apply to the exam first.');
         }
 
-        return view('student.exam-take', compact('exam'));
+        // Get questions without eager loading options (because options relationship is removed)
+        $questions = $exam->questions()->inRandomOrder()->get();
+
+        return view('student.exam-take', compact('exam', 'questions'));
     }
 
     /**
-     * Submit exam answers (stub for now).
+     * Submit exam answers and store result.
      */
     public function submitExam(Request $request, Exam $exam)
     {
-        // TODO: Store answers, calculate results, etc.
+        $validated = $request->validate([
+            'answers' => 'required|array',
+            'answers.*' => 'nullable|string', // question id => option key (option_a, option_b, etc.)
+        ]);
+
+        $answers = $validated['answers'];
+        $score = 0;
+        $total = 0;
+
+        foreach ($answers as $questionId => $selectedOptionKey) {
+            $question = Question::find($questionId);
+            if ($question && $selectedOptionKey && $selectedOptionKey === $question->correct_option) {
+                $score += $question->marks; // sum marks for correct answers
+            }
+            $total += $question ? $question->marks : 0;
+        }
+
+        // Store result
+        Result::updateOrCreate(
+            ['user_id' => auth()->id(), 'exam_id' => $exam->id],
+            ['score' => $score, 'total' => $total]
+        );
+
         return redirect()->route('student.exams.index')->with('success', 'Exam submitted successfully!');
     }
 

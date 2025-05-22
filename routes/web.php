@@ -137,9 +137,9 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('exams')->name('exams.')->group(function () {
-        Route::get('/', [StudentController::class, 'examIndex'])->name('index');
+        Route::get('/', [StudentController::class, 'index'])->name('index'); // ✅ Fixed method name
         Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view')->middleware('can:view,exam');
-        Route::get('/{exam}/start', [StudentController::class, 'startExam'])->name('start'); // ✅ Added route
+        Route::get('/{exam}/start', [StudentController::class, 'startExam'])->name('start');
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
         Route::post('/{exam}/apply', [StudentController::class, 'apply'])->name('apply');
     });
