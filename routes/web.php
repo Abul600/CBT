@@ -81,10 +81,8 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
 
         Route::get('/{exam}/questions', [ExamController::class, 'viewExamQuestions'])->name('questions');
         Route::get('/{exam}/questions/view', [ExamController::class, 'viewQuestions'])->name('questions.view');
-
         Route::get('/{exam}/questions/create', [ExamController::class, 'createQuestion'])->name('questions.create');
         Route::post('/{exam}/questions', [ExamController::class, 'storeQuestion'])->name('questions.store');
-
         Route::patch('/{exam}/questions/{question}/unassign', [ExamController::class, 'unassign'])->name('unassign_question');
 
         Route::post('/{exam}/assign-questions', [ExamController::class, 'assignQuestions'])
@@ -94,6 +92,9 @@ Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('modera
         Route::post('/{exam}/unassign-questions', [ExamController::class, 'unassignQuestions'])
             ->name('unassign-questions')
             ->middleware('can:assignQuestions,exam');
+
+        // ✅ Release Exam Route
+        Route::post('/{exam}/release', [ExamController::class, 'release'])->name('release');
     });
 
     Route::post('/assign-questions', [ExamController::class, 'assignQuestionsToExam'])->name('assign.questions');
@@ -137,7 +138,7 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('exams')->name('exams.')->group(function () {
-        Route::get('/', [StudentController::class, 'index'])->name('index'); // ✅ Fixed method name
+        Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/{exam}', [StudentController::class, 'viewExam'])->name('view')->middleware('can:view,exam');
         Route::get('/{exam}/start', [StudentController::class, 'startExam'])->name('start');
         Route::post('/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit');
@@ -168,7 +169,7 @@ Route::get('/moderators/deactivate/{id}', [ModeratorController::class, 'deactiva
 | Additional Routes
 |--------------------------------------------------------------------------
 */
-// ✅ Route for Mock Exams (Public route, separately handled for guest/mock use)
+// ✅ Public route for starting mock exams
 Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
     ->name('exams.mock.start')
     ->middleware(['auth', 'role:student']);

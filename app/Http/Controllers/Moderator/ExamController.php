@@ -57,7 +57,6 @@ class ExamController extends Controller
         }
 
         $validated = $request->validate($rules);
-
         $districtId = $validated['district_id'] ?? Auth::user()->district_id;
 
         Exam::create([
@@ -269,6 +268,24 @@ class ExamController extends Controller
         })->get();
 
         return view('moderator.exams.select_questions', compact('exam', 'assignedQuestions', 'unassignedQuestions'));
+    }
+
+    public function release(Exam $exam): RedirectResponse
+    {
+        $this->authorizeExam($exam);
+
+        if ($exam->questions()->count() < 1) {
+            return redirect()->back()->withErrors([
+                'message' => 'Add at least 1 question before releasing'
+            ]);
+        }
+
+        $exam->update([
+            'is_released' => true,
+            'released_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Exam released to students!');
     }
 
     protected function authorizeExam(Exam $exam): void

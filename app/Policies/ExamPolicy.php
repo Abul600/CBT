@@ -57,15 +57,21 @@ class ExamPolicy
      */
     public function assignQuestions(User $user, Exam $exam)
     {
-        return $user->hasRole('moderator') && 
-               $user->id === $exam->moderator_id &&
-               $user->district_id === $exam->district_id;
+        return $this->view($user, $exam);
     }
 
     /**
      * Determine whether the user can select questions for the exam.
      */
     public function selectQuestions(User $user, Exam $exam)
+    {
+        return $this->view($user, $exam);
+    }
+
+    /**
+     * Determine whether the moderator can release the exam.
+     */
+    public function release(User $user, Exam $exam)
     {
         return $user->hasRole('moderator') &&
                $user->id === $exam->moderator_id &&

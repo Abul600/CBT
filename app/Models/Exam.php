@@ -30,6 +30,8 @@ class Exam extends Model
         'status',
         'is_active',
         'type',
+        'is_released',
+        'released_at',
     ];
 
     // ====== Attribute Casting ======
@@ -40,6 +42,8 @@ class Exam extends Model
         'duration'          => 'integer',
         'is_active'         => 'boolean',
         'type'              => 'string',
+        'is_released'       => 'boolean',
+        'released_at'       => 'datetime',
     ];
 
     // ====== Relationships ======
@@ -104,6 +108,11 @@ class Exam extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', self::STATUS_COMPLETED);
+    }
+
+    public function scopeReleased($query)
+    {
+        return $query->where('is_released', true);
     }
 
     // ====== Helper Methods ======

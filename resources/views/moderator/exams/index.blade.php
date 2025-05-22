@@ -40,20 +40,22 @@
                                 <th scope="col">Exam Name</th>
                                 <th scope="col">Assigned Questions</th>
                                 <th scope="col">Pending Questions</th>
+                                <th scope="col">Release</th>
                                 <th scope="col" class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($exams as $exam)
+                                @php
+                                    $assignedCount = $exam->questions()->count();
+                                    $pendingCount = $exam->questions()->where('status', 'pending')->count();
+                                @endphp
                                 <tr>
                                     <td>{{ $exam->name }}</td>
-                                    <td>{{ $exam->questions()->count() }}</td>
+
+                                    <td>{{ $assignedCount }}</td>
+
                                     <td>
-                                        @php
-                                            $pendingCount = $exam->questions()
-                                                ->where('status', 'pending')
-                                                ->count();
-                                        @endphp
                                         @if($pendingCount > 0)
                                             <span class="badge bg-warning text-dark">
                                                 {{ $pendingCount }} pending review
@@ -62,6 +64,25 @@
                                             <span class="text-muted">None</span>
                                         @endif
                                     </td>
+
+                                    <td>
+                                        @if($exam->is_released)
+                                            <span class="badge bg-success">Released</span><br>
+                                            <small>{{ $exam->released_at->diffForHumans() }}</small>
+                                        @else
+                                            <form action="{{ route('moderator.exams.release', $exam) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-primary"
+                                                    {{ $assignedCount < 1 ? 'disabled' : '' }}>
+                                                    Release to Students
+                                                </button>
+                                                @if($assignedCount < 1)
+                                                    <small class="text-danger">Add questions first</small>
+                                                @endif
+                                            </form>
+                                        @endif
+                                    </td>
+
                                     <td class="text-end">
                                         <div class="d-flex gap-2 justify-content-end">
                                             <a href="{{ route('moderator.exams.questions', $exam->id) }}" 
@@ -116,7 +137,6 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Bootstrap tooltips
         const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
     });

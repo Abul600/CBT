@@ -24,20 +24,23 @@ class StudentController extends Controller
     }
 
     /**
-     * Display all exams available to the student, with districts for filtering.
+     * Display only released scheduled exams with optional district filtering.
      */
     public function index(Request $request)
     {
-        $districts = District::all();
         $selectedDistrict = $request->query('district');
 
-        $exams = Exam::when($selectedDistrict, function ($query) use ($selectedDistrict) {
-                return $query->where('district_id', $selectedDistrict);
-            })
-            ->where('is_active', true)
-            ->get();
+        $query = Exam::where('is_released', true)
+            ->where('type', 'scheduled');
 
-        return view('student.exams.index', compact('exams', 'districts', 'selectedDistrict'));
+        if ($selectedDistrict) {
+            $query->where('district_id', $selectedDistrict);
+        }
+
+        $exams = $query->get();
+        $districts = District::all();
+
+        return view('student.exams', compact('exams', 'districts', 'selectedDistrict'));
     }
 
     /**
@@ -83,11 +86,11 @@ class StudentController extends Controller
         $student = auth()->user();
 
         $results = $student->exams()
-            ->with('questions', 'pivot') // eager load if needed
-            ->wherePivot('status', 'completed') // adjust as per your pivot table
+            ->with('questions', 'pivot')
+            ->wherePivot('status', 'completed')
             ->get();
 
-        return view('student.results.index', compact('results'));
+        return view('student.results', compact('results'));
     }
 
     /**
