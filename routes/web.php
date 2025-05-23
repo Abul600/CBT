@@ -171,7 +171,22 @@ Route::get('/moderators/deactivate/{id}', [ModeratorController::class, 'deactiva
 | Additional Routes
 |--------------------------------------------------------------------------
 */
-// ✅ Public route for starting mock exams
+//  Public route for starting mock exams
 Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
     ->name('exams.mock.start')
     ->middleware(['auth', 'role:student']);
+    Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
+        Route::get('/exams/{exam}/apply', [StudentController::class, 'apply'])->name('exam.apply');
+    });
+    Route::middleware(['auth', 'role:moderator'])->prefix('moderator')->name('moderator.')->group(function () {
+        Route::prefix('exams/{exam}/questions')->name('exams.questions.')->group(function () {
+            Route::post('{question}/approve', [ExamController::class, 'approveQuestion'])->name('approve');
+        });
+    });
+    Route::post('/moderator/exams/{exam}/questions/{question}/reject', [ExamQuestionController::class, 'reject'])
+    ->name('moderator.exams.questions.reject');
+    Route::get('/moderator/questions/{question}', [QuestionController::class, 'show'])
+    ->name('moderator.questions.show');
+
+Route::post('/moderator/questions/{question}/unassign', [QuestionController::class, 'unassign'])
+    ->name('moderator.questions.unassign');

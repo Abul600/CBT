@@ -24,23 +24,26 @@ class StudentController extends Controller
     }
 
     /**
-     * Display only released scheduled exams with optional district filtering.
+     * Display released mock and applicable scheduled exams.
      */
     public function index(Request $request)
     {
         $selectedDistrict = $request->query('district');
 
-        $query = Exam::where('is_released', true)
-            ->where('type', 'scheduled');
+        $exams = Exam::where('is_released', true)
+            ->when($selectedDistrict, function ($query) use ($selectedDistrict) {
+                return $query->where('district_id', $selectedDistrict);
+            })
+            ->with(['questions', 'district'])
+            ->get()
+            ->filter(function ($exam) {
+                return $exam->type === 'mock' ||
+                    ($exam->type === 'scheduled' && $exam->application_end > now());
+            });
 
-        if ($selectedDistrict) {
-            $query->where('district_id', $selectedDistrict);
-        }
-
-        $exams = $query->get();
         $districts = District::all();
 
-        return view('student.exams', compact('exams', 'districts', 'selectedDistrict'));
+        return view('student.exams.index', compact('exams', 'districts', 'selectedDistrict'));
     }
 
     /**

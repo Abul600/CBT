@@ -90,6 +90,19 @@ class Exam extends Model
         return $this->type === 'mock';
     }
 
+    public function getLocalApplicationEndAttribute(): ?Carbon
+    {
+        return $this->application_end?->setTimezone(auth()->user()->timezone ?? config('app.timezone'));
+    }
+
+    public function getFormattedApplicationPeriodAttribute()
+    {
+        return [
+            'start' => optional($this->application_start)->format('M j, Y H:i'),
+            'end' => optional($this->application_end)->format('M j, Y H:i'),
+        ];
+    }
+
     // ====== Scopes ======
 
     public function scopeActive($query)
@@ -139,13 +152,11 @@ class Exam extends Model
 
     public function canApply(): bool
     {
-        if ($this->type === 'mock') return false;
+        if ($this->type !== 'scheduled') return false;
+        if (!$this->application_start || !$this->application_end) return false;
 
-        if (!$this->application_start || !$this->application_end) {
-            return false;
-        }
-
-        return now()->between(
+        $now = now();
+        return $now->between(
             $this->application_start->copy()->subMinutes(5),
             $this->application_end->copy()->addMinutes(5)
         );
