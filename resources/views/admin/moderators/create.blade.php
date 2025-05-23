@@ -7,10 +7,11 @@
         </div>
     </x-slot>
 
-    <div class="pt-8 pb-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="pt-0 pb-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-6">
             <div class="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 
-                        shadow-2xl sm:rounded-lg p-6 border border-white/30">
+                        shadow-2xl sm:rounded-lg p-6 border-4 border-white border-opacity-90 
+                        bg-white/5">
                 <form method="POST" action="{{ route('admin.moderators.store') }}">
                     @csrf
 
@@ -50,10 +51,13 @@
                         @enderror
                     </div>
 
-                    <!-- Dynamic District Dropdown -->
+                    <!-- District -->
                     <div class="mt-4">
                         <label class="text-black font-semibold">District</label>
-                        <select name="district_id" class="form-input-style" required>
+                        <select name="district_id"
+                                class="border rounded p-2 w-full bg-white text-black placeholder-gray-500
+                                       focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                required>
                             <option value="" disabled {{ old('district_id') ? '' : 'selected' }}>Select District</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
@@ -87,49 +91,18 @@
                                placeholder="Confirm Password" required>
                     </div>
 
-                    <!-- Role -->
-                    <div class="mt-4">
-                        <label for="role" class="text-black font-semibold">User Role</label>
-                        <select id="role" name="role" class="form-input-style" required>
-                            <option value="">-- Select Role --</option>
-                            <option value="moderator" {{ old('role') == 'moderator' ? 'selected' : '' }}>
-                                Moderator
-                            </option>
-                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>
-                                Student
-                            </option>
-                        </select>
-                        @error('role')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Submit -->
-                    <div class="mt-4">
-                        <button type="submit" class="btn-primary">
-                            Create User
+                    <!-- Submit Button -->
+                    <div class="mt-6">
+                        <button type="submit"
+                                class="mx-auto block px-6 py-3 min-w-[180px] text-white font-bold rounded-full
+                                       bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-blue-500 to-purple-600
+                                       hover:from-purple-600 hover:via-blue-500 hover:via-green-400 hover:to-yellow-400
+                                       shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                            Submit
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            .form-input-style {
-                @apply border rounded p-2 w-full bg-white text-black placeholder-gray-500
-                       focus:ring-2 focus:ring-yellow-400 focus:outline-none;
-            }
-
-            .error-message {
-                @apply text-red-500 text-sm mt-1;
-            }
-
-            .btn-primary {
-                @apply px-4 py-2 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-300
-                       transition transform hover:scale-105;
-            }
-        </style>
-    @endpush
 </x-app-layout>

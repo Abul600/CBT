@@ -7,21 +7,31 @@
         </div>
     </x-slot>
 
-    <div class="relative min-h-screen bg-cover bg-center flex flex-col justify-center items-center overflow-hidden"
+    <div class="relative min-h-screen bg-cover bg-center flex flex-col justify-start items-center overflow-hidden pt-20"
          style="background-image: url('{{ asset('images/13.webp') }}');">
 
         @if(auth()->user()->role === 'admin')
-            <a href="{{ route('admin.moderators.index') }}" 
-               class="absolute top-20 px-10 py-4 text-xl font-bold w-64 text-center bg-red-500 text-black rounded-lg shadow-md 
-                      hover:bg-gradient-to-r hover:from-yellow-400 hover:to-red-500 transition-all duration-300 ease-in-out 
-                      hover:scale-110 border-4 border-green-400 ring-8 ring-yellow-500 ring-opacity-75 
-                      hover:shadow-[0px_0px_20px_rgba(255,255,255,0.8)]">
-                Manage Moderators
-            </a>
+            <div class="absolute top-12 left-1/2 transform -translate-x-1/2 flex flex-row space-x-16 z-10">
+                <!-- Manage Moderators Button (Updated Style) -->
+                <a href="{{ route('admin.moderators.index') }}" 
+                   class="px-10 py-4 text-xl font-bold w-64 text-center bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 
+                          text-white rounded-lg shadow-md hover:from-red-500 hover:to-purple-500 transition-all duration-300 ease-in-out 
+                          hover:scale-110 border-4 border-white ring-4 ring-white ring-opacity-30 hover:ring-opacity-60">
+                    Manage Moderators
+                </a>
+
+                <!-- Manage Users (Roles) Button -->
+                <a href="{{ route('admin.users.index') }}"
+                   class="px-10 py-4 text-xl font-bold w-64 text-center bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 
+                          text-white rounded-lg shadow-md hover:from-red-500 hover:to-purple-500 transition-all duration-300 ease-in-out 
+                          hover:scale-110 border-4 border-white ring-4 ring-white ring-opacity-30 hover:ring-opacity-60">
+                    Manage Users & Roles
+                </a>
+            </div>
         @endif
 
-        <!-- Moderator Instructions Card (Moved Upwards) -->
-        <div class="mt-10 w-2/4 p-6 rounded-lg shadow-lg bg-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out 
+        <!-- Moderator Instructions Card -->
+        <div class="mt-32 w-2/4 p-6 rounded-lg shadow-lg bg-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out 
                     hover:scale-105 hover:shadow-[0px_0px_20px_rgba(255,255,255,0.5)]">
             <h3 class="text-3xl font-extrabold text-transparent bg-clip-text 
                        bg-gradient-to-r from-yellow-400 via-red-500 to-purple-500 
