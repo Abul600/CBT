@@ -35,6 +35,7 @@ class User extends Authenticatable
         'district_id',
         'moderator_id',
         'is_moderator',
+        'timezone', // Ensure this is fillable if users can have custom timezones
     ];
 
     /**
@@ -72,7 +73,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Override assignRole to sync and fire event
+     * Override assignRole to sync and fire event.
      */
     public function assignRole($role, $guard = null)
     {
@@ -81,7 +82,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Sync the role to the 'role' column in the database
+     * Sync the role to the 'role' column in the database.
      */
     public function syncRoleToColumn()
     {
@@ -93,7 +94,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Redirect user to the appropriate dashboard based on their role
+     * Redirect user to the appropriate dashboard based on their role.
      */
     public function redirectToRoleDashboard()
     {
@@ -107,7 +108,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the default dashboard route
+     * Get the default dashboard route.
      */
     protected function defaultDashboard()
     {
@@ -115,7 +116,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope for active users
+     * Scope for active users.
      */
     public function scopeActive($query)
     {
@@ -123,7 +124,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope for active moderators
+     * Scope for active moderators.
      */
     public function scopeActiveModerators($query)
     {
@@ -132,7 +133,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope for users within a specific district ID
+     * Scope for users within a specific district ID.
      */
     public function scopeForDistrict($query, $districtId)
     {
@@ -140,7 +141,7 @@ class User extends Authenticatable
     }
 
     /**
-     * The district this user belongs to
+     * The district this user belongs to.
      */
     public function district()
     {
@@ -148,7 +149,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the Moderator who created this Paper Setter
+     * Get the Moderator who created this Paper Setter.
      */
     public function moderator()
     {
@@ -156,7 +157,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the exam results for this user
+     * Get the exam results for this user.
      */
     public function results()
     {
@@ -164,7 +165,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Exams the student has applied to
+     * Exams the student has applied to.
      */
     public function appliedExams()
     {
@@ -172,11 +173,35 @@ class User extends Authenticatable
     }
 
     /**
-     * Exams the student has taken or is associated with (many-to-many)
+     * Exams the student has taken or is associated with (many-to-many).
      */
     public function exams(): BelongsToMany
     {
         return $this->belongsToMany(Exam::class, 'exam_user', 'user_id', 'exam_id')
                     ->withTimestamps();
+    }
+
+    /**
+     * Get the user's timezone or fall back to app default.
+     */
+    public function getTimezoneAttribute()
+    {
+        return $this->attributes['timezone'] ?? config('app.timezone');
+    }
+
+    /**
+     * Accessor for user's local timezone (alias to timezone).
+     */
+    public function getLocalTimezoneAttribute()
+    {
+        return $this->timezone ?? config('app.timezone');
+    }
+
+    /**
+     * Check if user has applied to a given exam.
+     */
+    public function hasApplied(Exam $exam): bool
+    {
+        return $this->appliedExams->contains($exam->id);
     }
 }

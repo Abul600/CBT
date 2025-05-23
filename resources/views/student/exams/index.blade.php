@@ -34,44 +34,57 @@
                         @endif
                     </p>
                     <p class="mt-1"><strong>Duration:</strong> {{ $exam->duration }} minutes</p>
-                    @if($exam->type === 'scheduled')
+
+                    @if($exam->type === 'scheduled' && $exam->exam_start)
                         <p class="mt-2"><strong>Start Time:</strong>
-                            {{ $exam->exam_start ? $exam->exam_start->format('d M Y, h:i A') : 'Not scheduled' }}
+                            {{ $exam->exam_start->setTimezone(auth()->user()->timezone)->format('d M Y, h:i A') }}
                         </p>
                     @endif
 
                     <!-- Status & Application Section -->
                     <div class="mt-4">
                         @if($exam->type === 'mock')
-                            <!-- Mock Exam - Can start anytime -->
                             <a href="{{ route('exams.mock.start', $exam) }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                                 Start Now
                             </a>
                         @else
-                            <!-- Scheduled Exam -->
                             @if($exam->canApply())
                                 <form method="POST" action="{{ route('student.exam.apply', $exam) }}">
                                     @csrf
                                     <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                                         Apply Now
                                     </button>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Closes {{ $exam->application_end->setTimezone(auth()->user()->timezone)->format('d M Y, h:i A') }}
+                                    </p>
                                 </form>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    Apply before {{ $exam->application_end->format('d M Y, h:i A') }}
-                                </p>
-                            @elseif(auth()->user()->appliedExams->contains($exam))
+                            @elseif($exam->hasApplied(auth()->user()))
                                 <button class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
                                     Applied ✓
                                 </button>
                             @else
-                                <p class="text-sm text-red-600 font-medium">Applications closed ({{ $exam->application_end->format('d M Y, h:i A') }})</p>
+                                <p class="text-sm text-red-600 font-medium">
+                                    Applications closed
+                                    @if($exam->application_end)
+                                        ({{ $exam->application_end->setTimezone(auth()->user()->timezone)->format('d M Y, h:i A') }})
+                                    @endif
+                                </p>
                             @endif
 
-                            <!-- View/Start Button -->
+                            <!-- View Exam Button -->
                             <a href="{{ route('student.exams.view', $exam) }}" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                                 View Exam
                             </a>
                         @endif
+                    </div>
+
+                    <!-- Debug Info (Optional for Development) -->
+                    <div class="debug-info text-gray-500 text-sm mt-4 border-t pt-2">
+                        <div>Exam ID: {{ $exam->id }}</div>
+                        <div>App Start: {{ $exam->application_start?->format('Y-m-d H:i:s T') ?? 'N/A' }}</div>
+                        <div>App End: {{ $exam->application_end?->format('Y-m-d H:i:s T') ?? 'N/A' }}</div>
+                        <div>Now: {{ now()->format('Y-m-d H:i:s T') }}</div>
+                        <div>Can Apply: {{ $exam->canApply() ? 'YES' : 'NO' }}</div>
                     </div>
                 </div>
             @endforeach

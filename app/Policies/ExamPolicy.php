@@ -95,4 +95,14 @@ class ExamPolicy
     {
         return $user->hasRole('student') && $exam->type === 'mock';
     }
+
+    /**
+     * Determine whether the student can apply for a scheduled exam.
+     */
+    public function apply(User $user, Exam $exam)
+    {
+        return $user->hasRole('student') &&
+               $exam->type === 'scheduled' &&
+               $exam->canApply(); // Assumes `canApply()` is defined in the Exam model
+    }
 }

@@ -35,8 +35,8 @@ class ExamController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $rules = [
-            'name' => 'required|string|max:255',
             'type' => 'required|in:mock,scheduled',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'duration' => 'required|integer|min:1',
             'district_id' => 'nullable|exists:districts,id',
@@ -48,15 +48,10 @@ class ExamController extends Controller
                 'application_end' => 'required|date|after:application_start',
                 'exam_start' => 'required|date|after:application_end',
             ];
-        } else {
-            $rules += [
-                'application_start' => 'nullable|date',
-                'application_end' => 'nullable|date',
-                'exam_start' => 'nullable|date',
-            ];
         }
 
         $validated = $request->validate($rules);
+
         $districtId = $validated['district_id'] ?? Auth::user()->district_id;
 
         Exam::create([
@@ -69,8 +64,8 @@ class ExamController extends Controller
             'application_start' => $validated['application_start'] ?? null,
             'application_end' => $validated['application_end'] ?? null,
             'exam_start' => $validated['exam_start'] ?? null,
-            'exam_end' => $validated['type'] === 'scheduled' && $validated['exam_start']
-                ? Carbon::parse($validated['exam_start'])->addMinutes((int) $validated['duration'])
+            'exam_end' => isset($validated['exam_start']) && $validated['type'] === 'scheduled'
+                ? Carbon::parse($validated['exam_start'])->addMinutes((int)$validated['duration'])
                 : null,
             'status' => 'draft',
             'is_active' => true,
