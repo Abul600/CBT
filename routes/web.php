@@ -187,6 +187,15 @@ Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
     ->name('moderator.exams.questions.reject');
     Route::get('/moderator/questions/{question}', [QuestionController::class, 'show'])
     ->name('moderator.questions.show');
-
-Route::post('/moderator/questions/{question}/unassign', [QuestionController::class, 'unassign'])
-    ->name('moderator.questions.unassign');
+    Route::get('/student/exams/start/{exam}', [StudentController::class, 'startExam'])->name('student.exams.start');
+    Route::prefix('student/exams')->group(function () {
+        Route::get('/', [StudentController::class, 'index'])->name('student.exams.index');
+        Route::get('/{exam}', [StudentController::class, 'view'])->name('student.exams.view');
+        Route::post('/{exam}/start', [StudentController::class, 'start'])->name('student.exams.start');
+    });
+    Route::prefix('moderator')->name('moderator.')->group(function() {
+        // other routes...
+    
+        Route::post('questions/{question}/unassign', [QuestionController::class, 'unassign'])->name('questions.unassign');
+    });
+    
