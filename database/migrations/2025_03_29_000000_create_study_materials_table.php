@@ -13,10 +13,19 @@ return new class extends Migration
     {
         Schema::create('study_materials', function (Blueprint $table) {
             $table->id();
+
+            // Basic info
             $table->string('title');
             $table->text('description');
-            $table->string('file_path'); // Path to PDF/Word documents
-            $table->foreignId('district_id')->constrained()->onDelete('cascade'); // For district-specific materials
+            $table->string('file_path'); // Path to uploaded files
+
+            // Foreign keys
+            $table->foreignId('district_id')->constrained()->onDelete('cascade'); // Optional: district-specific
+            $table->foreignId('original_exam_id')->constrained('exams'); // Links to converted exam
+
+            // Optional answer key or explanations for descriptive questions
+            $table->text('descriptive_answers')->nullable();
+
             $table->timestamps();
         });
     }
