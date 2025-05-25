@@ -11,7 +11,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
 
-                <h1 class="text-2xl font-bold mb-4">Manage Paper Setters</h1>
+                
 
                 <!-- Show flash error if limit exceeded -->
                 @if (session('error'))
@@ -31,9 +31,10 @@
 
                 <!-- Always show Add button -->
                 <a href="{{ route('moderator.paper_setters.create') }}" 
-                   class="{{ $activeCount >= 3 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600' }} text-white px-4 py-2 rounded inline-block">
-                    Add Paper Setter
-                </a>
+   class="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded mb-4 no-underline">
+    ➕ Add Paper Setter
+</a>
+
 
                 <!-- Paper Setters Table -->
                 <table class="mt-4 w-full border-collapse border border-gray-300">
@@ -51,24 +52,25 @@
                                 <td class="border border-gray-300 px-4 py-2">{{ $setter->name }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $setter->email }}</td>
                                 <td class="border border-gray-300 px-4 py-2">
-                                    <span class="px-2 py-1 rounded text-white 
-                                          {{ $setter->is_active ? 'bg-green-500' : 'bg-red-500' }}">
+                                    <span class="px-2 py-1 rounded  
+                                          {{ $setter->is_active ? 'text-green-500 font-bold' : 'text-red-500 font-bold' }}">
                                         {{ $setter->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="border border-gray-300 px-4 py-2 flex space-x-2">
                                     <!-- Edit Button -->
                                     <a href="{{ route('moderator.paper_setters.edit', $setter) }}" 
-                                       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
-                                        ✏️ Edit
-                                    </a>
+   class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-white rounded no-underline">
+    Edit
+</a>
+
 
                                     <!-- Activate/Deactivate Button -->
                                     <form action="{{ route('moderator.paper_setters.toggleStatus', $setter->id) }}" method="POST">
                                         @csrf
                                         @method('PUT')
                                         <button type="submit" class="px-3 py-1 rounded text-white 
-                                                {{ $setter->is_active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600' }}">
+                                                {{ $setter->is_active ? 'px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded' : 'px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded' }}">
                                             {{ $setter->is_active ? 'Deactivate' : 'Activate' }}
                                         </button>
                                     </form>

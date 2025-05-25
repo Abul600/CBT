@@ -8,7 +8,7 @@
     </x-slot>
 
     <div class="py-12 flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-300 to-purple-400">
-        <div class="relative w-full max-w-3xl bg-white rounded-3xl p-8 border border-gray-200 shadow-[10px_10px_40px_rgba(0,0,0,0.2)] mt-[-150px]">
+        <div class="relative w-full max-w-3xl bg-white rounded-3xl p-10 border-4 border-gray-300 shadow-[10px_10px_40px_rgba(0,0,0,0.2)] mt-[-300px]">
 
             <h3 class="text-3xl font-bold text-gray-900 text-center mb-6">
                 🌟 Enter Your Details
@@ -58,19 +58,6 @@
                     <input type="password" name="password_confirmation" required class="fun-input peer" placeholder=" ">
                     <label class="fun-label">Confirm Password</label>
                 </div>
-
-                {{-- District inputs removed since they’re set automatically --}}
-                {{-- 
-                <div class="form-group">
-                    <label>District</label>
-                    <input type="text" name="district" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label>District ID</label>
-                    <input type="number" name="district_id" class="form-control">
-                </div>
-                --}}
 
                 <!-- Submit Button -->
                 <div class="col-span-2 mt-8 text-center">
@@ -123,13 +110,6 @@
         .fun-input:focus {
             border-color: rgb(228, 99, 142);
             box-shadow: 5px 5px 20px rgba(233, 30, 99, 0.3), -4px -4px 12px rgba(255, 255, 255, 0.9);
-        }
-
-        .relative.w-full.max-w-3xl:hover {
-            border-color: #ff00ff;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8), 0 0 40px rgba(255, 0, 255, 0.5);
-            transform: scale(1.05);
-            transition: all 0.3s ease-in-out;
         }
 
         .fun-button {
