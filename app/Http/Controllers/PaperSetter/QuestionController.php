@@ -108,7 +108,7 @@ class QuestionController extends Controller
             ->update([
                 'status' => 'sent',
                 'sent_to_moderator_id' => $moderatorId,
-                'sent_at' => now(), // Ensure this column exists in your DB
+                'sent_at' => now(),
             ]);
 
         if ($updatedCount > 0) {
@@ -145,5 +145,13 @@ class QuestionController extends Controller
         return redirect()
             ->route('paper_setter.questions.index')
             ->with('error', 'No draft questions were deleted.');
+    }
+
+    /**
+     * Show a single question (shared with moderator view).
+     */
+    public function show(Question $question)
+    {
+        return view('moderator.exams.questions.show', compact('question'));
     }
 }

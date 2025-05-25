@@ -22,12 +22,12 @@ class QuestionReviewController extends Controller
         
         $questions = Question::with(['paperSetter', 'exam'])
             ->where('moderator_id', $moderatorId)
-            ->when($request->filled('exam_id'), function($query) use ($request) {
+            ->when($request->filled('exam_id'), function ($query) use ($request) {
                 $query->where('exam_id', $request->exam_id);
             })
-            ->when($request->status, function($query, $status) {
+            ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
-            }, function($query) {
+            }, function ($query) {
                 $query->whereIn('status', ['sent', 'pending']);
             })
             ->latest()
@@ -84,8 +84,7 @@ class QuestionReviewController extends Controller
         $validated = $request->validate([
             'exam_id' => [
                 'required',
-                Rule::exists('exams', 'id')
-                    ->where('moderator_id', auth()->id())
+                Rule::exists('exams', 'id')->where('moderator_id', auth()->id())
             ]
         ]);
 
@@ -109,8 +108,7 @@ class QuestionReviewController extends Controller
             ],
             'exam_id' => [
                 'required',
-                Rule::exists('exams', 'id')
-                    ->where('moderator_id', auth()->id())
+                Rule::exists('exams', 'id')->where('moderator_id', auth()->id())
             ]
         ]);
 
@@ -118,5 +116,15 @@ class QuestionReviewController extends Controller
             ->update(['exam_id' => $validated['exam_id']]);
 
         return back()->with('success', 'Selected questions assigned to exam.');
+    }
+
+    /**
+     * Show a specific question for review.
+     */
+    public function show(Question $question): View
+    {
+        $this->authorize('view', $question);
+
+        return view('moderator.exams.questions.show', compact('question'));
     }
 }

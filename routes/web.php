@@ -186,7 +186,7 @@ Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
     Route::post('/moderator/exams/{exam}/questions/{question}/reject', [ExamQuestionController::class, 'reject'])
     ->name('moderator.exams.questions.reject');
     Route::get('/moderator/questions/{question}', [QuestionController::class, 'show'])
-    ->name('moderator.questions.show');
+    ->name('moderator.exams.questions.show');
     Route::get('/student/exams/start/{exam}', [StudentController::class, 'startExam'])->name('student.exams.start');
     Route::prefix('student/exams')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('student.exams.index');

@@ -137,7 +137,7 @@
 
                                     {{-- View Details Button --}}
                                     <a 
-                                        href="{{ route('moderator.questions.show', $question->id) }}" 
+                                        href="{{ route('moderator.exams.questions.show', $question->id) }}" 
                                         class="btn btn-sm btn-gradient-info fw-bold"
                                         title="View details"
                                         style="transition: transform 0.2s ease;"
