@@ -28,22 +28,18 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedDistrict = $request->query('district');
-
-        $exams = Exam::where('is_released', true)
-            ->when($selectedDistrict, function ($query) use ($selectedDistrict) {
-                return $query->where('district_id', $selectedDistrict);
-            })
-            ->with(['questions', 'district'])
-            ->get()
-            ->filter(function ($exam) {
-                return $exam->type === 'mock' ||
-                    ($exam->type === 'scheduled' && $exam->application_end > now());
-            });
-
         $districts = District::all();
+        $selectedDistrict = $request->get('district');
 
-        return view('student.exams.index', compact('exams', 'districts', 'selectedDistrict'));
+        $query = Exam::with('district')
+            ->when($selectedDistrict, fn($q) => $q->where('district_id', $selectedDistrict))
+            ->orderBy('created_at', 'desc');
+
+        return view('student.exams.index', [
+            'exams' => $query->paginate(10),
+            'districts' => $districts,
+            'selectedDistrict' => $selectedDistrict
+        ]);
     }
 
     /**
@@ -117,11 +113,11 @@ class StudentController extends Controller
     }
 
     /**
-     * View a specific exam.
+     * View a specific exam (details page).
      */
-    public function viewExam(Exam $exam)
+    public function view(Exam $exam)
     {
-        return view('student.exams.view', compact('exam'));
+        return view('student.exam-view', compact('exam'));
     }
 
     /**

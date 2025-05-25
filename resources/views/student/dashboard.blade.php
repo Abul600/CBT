@@ -18,7 +18,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
 
             <!-- Take Exam -->
-            <a href="{{ route('student.take.exam') }}"
+            <a href="{{ route('student.exams.index') }}"
                class="relative bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 rounded-3xl p-8 shadow-md transform hover:scale-105 transition duration-300 border border-transparent hover:border-indigo-300">
                 <div class="absolute top-0 right-0 mt-4 mr-4 text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full animate-pulse">
                     New

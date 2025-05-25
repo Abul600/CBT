@@ -32,6 +32,8 @@ class Exam extends Model
         'type',
         'is_released',
         'released_at',
+        'converted_to_mock',
+        'converted_at',
     ];
 
     // ====== Attribute Casting ======
@@ -44,10 +46,11 @@ class Exam extends Model
         'type'              => 'string',
         'is_released'       => 'boolean',
         'released_at'       => 'datetime',
+        'converted_to_mock' => 'boolean',
+        'converted_at'      => 'datetime',
     ];
 
     // ====== Relationships ======
-
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(Question::class, 'exam_question');
@@ -79,7 +82,6 @@ class Exam extends Model
     }
 
     // ====== Accessors ======
-
     public function getExamEndAttribute(): ?Carbon
     {
         return $this->exam_start?->copy()->addMinutes((int) $this->duration);
@@ -99,12 +101,32 @@ class Exam extends Model
     {
         return [
             'start' => optional($this->application_start)->format('M j, Y H:i'),
-            'end' => optional($this->application_end)->format('M j, Y H:i'),
+            'end'   => optional($this->application_end)->format('M j, Y H:i'),
         ];
     }
 
-    // ====== Scopes ======
+    public function getStatusAttribute(): string
+    {
+        if (!$this->exam_start || !$this->exam_end) {
+            return 'invalid';
+        }
 
+        if ($this->converted_to_mock) {
+            return 'converted_mock';
+        }
+
+        if (now()->gt($this->exam_end)) {
+            return self::STATUS_COMPLETED;
+        }
+
+        if (now()->gte($this->exam_start)) {
+            return self::STATUS_ACTIVE;
+        }
+
+        return self::STATUS_DRAFT;
+    }
+
+    // ====== Scopes ======
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
@@ -129,11 +151,11 @@ class Exam extends Model
     }
 
     // ====== Helper Methods ======
-
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE &&
                $this->is_active &&
+               $this->exam_start && $this->exam_end &&
                now()->between($this->exam_start, $this->exam_end);
     }
 
@@ -141,13 +163,15 @@ class Exam extends Model
     {
         return $this->status === self::STATUS_DRAFT &&
                $this->is_active &&
+               $this->exam_start &&
                now()->lt($this->exam_start);
     }
 
     public function hasEnded(): bool
     {
-        return $this->status === self::STATUS_COMPLETED ||
-               now()->gt($this->exam_end);
+        return $this->exam_end && (
+            $this->status === self::STATUS_COMPLETED || now()->gt($this->exam_end)
+        );
     }
 
     public function canApply(): bool
@@ -166,10 +190,11 @@ class Exam extends Model
     {
         if ($this->type === 'mock') return true;
 
-        return now()->between(
-            $this->exam_start->copy()->subMinutes(10),
-            $this->exam_end
-        );
+        return $this->exam_start && $this->exam_end &&
+               now()->between(
+                   $this->exam_start->copy()->subMinutes(10),
+                   $this->exam_end
+               );
     }
 
     public function hasApplied(User $user = null): bool
@@ -178,8 +203,26 @@ class Exam extends Model
         return $this->users()->where('user_id', $user->id)->exists();
     }
 
-    // ====== Model Events ======
+    public function hasStarted(): bool
+    {
+        return $this->exam_start && now()->gte($this->exam_start);
+    }
 
+    public function isConverted(): bool
+    {
+        return $this->converted_to_mock;
+    }
+
+    public function isCurrentlyRunning(): bool
+    {
+        return $this->exam_start &&
+               $this->exam_end &&
+               now()->between($this->exam_start, $this->exam_end) &&
+               $this->is_active &&
+               $this->status !== 'invalid';
+    }
+
+    // ====== Auto Convert Logic ======
     protected static function booted()
     {
         static::saving(function ($exam) {
@@ -195,5 +238,23 @@ class Exam extends Model
                 }
             }
         });
+
+        static::retrieved(function ($exam) {
+            if ($exam->shouldConvertToMock()) {
+                $exam->update([
+                    'type' => 'mock',
+                    'converted_to_mock' => true,
+                    'converted_at' => now()
+                ]);
+            }
+        });
+    }
+
+    public function shouldConvertToMock(): bool
+    {
+        return $this->type === 'scheduled' &&
+               !$this->converted_to_mock &&
+               $this->exam_start &&
+               now()->diffInHours($this->exam_start) >= 24;
     }
 }

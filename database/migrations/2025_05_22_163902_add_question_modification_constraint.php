@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -10,18 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // WARNING: This will fail on MySQL due to unsupported subquery in CHECK
-        DB::statement('
-            ALTER TABLE exam_question
-            ADD CONSTRAINT check_exam_released
-            CHECK (
-                NOT EXISTS (
-                    SELECT 1 FROM exams 
-                    WHERE exams.id = exam_question.exam_id 
-                    AND exams.is_released = true
-                )
-            )
-        ');
+        //
     }
 
     /**
@@ -29,6 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE exam_question DROP CONSTRAINT check_exam_released');
+        //
     }
 };
