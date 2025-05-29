@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
 
-            // Relationships
+            // Relations
             $table->foreignId('paper_setter_id')
                 ->constrained('users')
                 ->onDelete('cascade');
@@ -48,18 +48,16 @@ return new class extends Migration {
             $table->string('option_b')->nullable();
             $table->string('option_c')->nullable();
             $table->string('option_d')->nullable();
-            $table->enum('correct_option', ['A', 'B', 'C', 'D'])->nullable();
 
-            // Types and Metadata
+            // Use lowercase only for correct_option
+            $table->string('correct_option')->nullable()->checkIn(['a', 'b', 'c', 'd']);
+
+            // Type and scoring
             $table->enum('type', ['mcq1', 'mcq2', 'descriptive']);
-            $table->enum('question_type', ['mcq1', 'mcq2', 'descriptive']); // Duplicate naming removed below
             $table->integer('marks')->default(1);
 
-            // Status
-            $table->enum('status', ['draft', 'pending', 'approved', 'rejected'])
-                  ->default('draft');
-
-            // Tracking
+            // Status and tracking
+            $table->enum('status', ['draft', 'pending', 'approved', 'rejected'])->default('draft');
             $table->timestamp('sent_at')->nullable();
 
             $table->timestamps();

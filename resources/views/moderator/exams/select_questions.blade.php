@@ -17,7 +17,7 @@
                     @if ($unassignedQuestions->isEmpty())
                         <p class="text-muted mb-0">No unassigned questions available.</p>
                     @else
-                        <div class="table-responsive">
+                        <div class="table-responsive mb-3">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
@@ -33,7 +33,13 @@
                                     @foreach ($unassignedQuestions as $question)
                                         <tr>
                                             <td>
-                                                <input type="checkbox" name="question_ids[]" value="{{ $question->id }}">
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="question_ids[]" 
+                                                    value="{{ $question->id }}"
+                                                    {{-- Disable checkbox if question type is descriptive and exam is mock --}}
+                                                    @if($exam->type === 'mock' && $question->type === 'descriptive') disabled @endif
+                                                >
                                             </td>
                                             <td>{{ Str::limit($question->text, 80) }}</td>
                                             <td class="text-center text-capitalize">{{ $question->type }}</td>
@@ -43,7 +49,11 @@
                                 </tbody>
                             </table>
                         </div>
-                        <button type="submit" class="btn btn-primary">
+
+                        <button type="submit" class="btn btn-primary" 
+                            {{-- Disable submit button if exam is mock and all unassigned questions are descriptive --}}
+                            @if($exam->type === 'mock' && $unassignedQuestions->every(fn($q) => $q->type === 'descriptive')) disabled @endif
+                        >
                             <i class="fas fa-plus me-2"></i>Assign Selected
                         </button>
                     @endif
@@ -118,7 +128,10 @@
         // Select All for Unassigned Questions
         document.getElementById('select-all-unassigned')?.addEventListener('change', function (e) {
             document.querySelectorAll('form[action*="assign-questions"] input[name="question_ids[]"]').forEach(cb => {
-                cb.checked = e.target.checked;
+                // Only check enabled checkboxes (not disabled)
+                if (!cb.disabled) {
+                    cb.checked = e.target.checked;
+                }
             });
         });
 
@@ -131,3 +144,27 @@
     });
 </script>
 @endsection
+
+
+{{-- Additional: Question Type Select Dropdown (for creating/editing question) with frontend validation --}}
+{{-- This snippet you can embed where needed in your question creation form --}}
+
+{{-- Example snippet: --}}
+{{-- 
+<select name="type" class="form-select" 
+        {{ $exam->type === 'mock' ? 'disabled' : '' }}>
+    <option value="mcq1" {{ old('type') == 'mcq1' ? 'selected' : '' }}>MCQ Type 1</option>
+    <option value="mcq2" {{ old('type') == 'mcq2' ? 'selected' : '' }}>MCQ Type 2</option>
+    <option value="descriptive" 
+            {{ $exam->type === 'mock' ? 'disabled' : '' }}
+            {{ old('type') == 'descriptive' ? 'selected' : '' }}>
+        Descriptive
+    </option>
+</select>
+
+@if($exam->type === 'mock')
+<div class="text-sm text-danger mt-1">
+    Descriptive questions are disabled for mock exams
+</div>
+@endif 
+--}}

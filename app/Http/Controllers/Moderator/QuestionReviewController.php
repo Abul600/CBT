@@ -118,13 +118,45 @@ class QuestionReviewController extends Controller
         return back()->with('success', 'Selected questions assigned to exam.');
     }
 
-    /**
-     * Show a specific question for review.
-     */
     public function show(Question $question): View
     {
         $this->authorize('view', $question);
 
         return view('moderator.exams.questions.show', compact('question'));
+    }
+
+    /**
+     * Store a new question linked to an exam (with validation by exam type).
+     */
+    public function store(Request $request, Exam $exam): RedirectResponse
+    {
+        $validated = $request->validate([
+            'question_text' => 'required|string|max:1000',
+            'type' => [
+                'required',
+                Rule::in($exam->type === 'mock' ? ['mcq1', 'mcq2'] : ['mcq1', 'mcq2', 'descriptive'])
+            ],
+            'marks' => 'required|integer|min:1',
+            'option1' => 'nullable|string|max:255',
+            'option2' => 'nullable|string|max:255',
+            'option3' => 'nullable|string|max:255',
+            'option4' => 'nullable|string|max:255',
+            'correct_option' => [
+                'nullable',
+                Rule::in(['option1', 'option2', 'option3', 'option4'])
+            ]
+        ]);
+
+        // Safety: descriptive should not be allowed in mock (extra check)
+        if ($exam->type === 'mock' && $request->type === 'descriptive') {
+            abort(422, 'Descriptive questions are not allowed in mock exams.');
+        }
+
+        $validated['moderator_id'] = auth()->id();
+        $validated['status'] = 'approved';
+
+        $exam->questions()->create($validated);
+
+        return redirect()->back()->with('success', 'Question added successfully.');
     }
 }

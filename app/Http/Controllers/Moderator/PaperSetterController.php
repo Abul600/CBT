@@ -7,12 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Question;
+use App\Models\Exam;
+use App\Models\DescriptiveAnswer;
+use App\Models\Result;
 
 class PaperSetterController extends Controller
 {
-    /** Display a listing of the paper setters created by this moderator. */
+    /** ========== Paper Setter Management ========== */
+
     public function index()
     {
         if (!Gate::allows('manage-paper-setters')) {
@@ -26,7 +31,6 @@ class PaperSetterController extends Controller
         return view('moderator.paper_setters.index', compact('paperSetters'));
     }
 
-    /** Show the form for creating a new paper setter. */
     public function create()
     {
         $activeCount = User::role('paper_setter')
@@ -42,7 +46,6 @@ class PaperSetterController extends Controller
         return view('moderator.paper_setters.create');
     }
 
-    /** Store a newly created paper setter in storage. */
     public function store(Request $request)
     {
         if (!Gate::allows('manage-paper-setters')) {
@@ -85,7 +88,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Paper Setter created successfully.');
     }
 
-    /** Show the form for editing the specified paper setter. */
     public function edit(User $paperSetter)
     {
         if ($paperSetter->moderator_id !== auth()->id()) {
@@ -95,7 +97,6 @@ class PaperSetterController extends Controller
         return view('moderator.paper_setters.edit', compact('paperSetter'));
     }
 
-    /** Update the specified paper setter in storage. */
     public function update(Request $request, User $paperSetter)
     {
         if ($paperSetter->moderator_id !== auth()->id()) {
@@ -116,7 +117,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Paper Setter updated successfully.');
     }
 
-    /** Remove the specified paper setter from storage. */
     public function destroyPaperSetter(User $paperSetter)
     {
         if ($paperSetter->moderator_id !== auth()->id()) {
@@ -129,7 +129,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Paper Setter deleted successfully.');
     }
 
-    /** Toggle activation status of a paper setter. */
     public function toggleStatus($id)
     {
         $user = User::role('paper_setter')
@@ -154,26 +153,24 @@ class PaperSetterController extends Controller
         return redirect()->back()->with('success', 'User status updated successfully!');
     }
 
-    /** Paper Setter Dashboard. */
+    /** ========== Paper Setter Dashboard & Questions ========== */
+
     public function dashboard()
     {
         return view('paper_setter.dashboard');
     }
 
-    /** Display a listing of questions created by the logged-in paper setter. */
     public function questionIndex()
     {
         $questions = Question::where('created_by', auth()->id())->get();
         return view('paper_setter.questions.index', compact('questions'));
     }
 
-    /** Show form to create a new question. */
     public function createQuestion()
     {
         return view('paper_setter.questions.create');
     }
 
-    /** Store a newly created question. */
     public function storeQuestion(Request $request)
     {
         $request->validate([
@@ -194,7 +191,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Question added successfully.');
     }
 
-    /** Delete a specific question by ID. */
     public function destroyQuestion($id)
     {
         $question = Question::where('id', $id)
@@ -207,7 +203,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Question deleted successfully.');
     }
 
-    /** Delete a question using route model binding and authorization. */
     public function destroyQuestionModel(Question $question)
     {
         $this->authorize('delete', $question);
@@ -218,7 +213,6 @@ class PaperSetterController extends Controller
             ->with('success', 'Question deleted successfully.');
     }
 
-    /** Send selected questions to Moderator for review. */
     public function sendToModerator(Request $request)
     {
         $request->validate([
@@ -231,10 +225,90 @@ class PaperSetterController extends Controller
             ->where('sent_to_moderator', false);
 
         $count = $questions->count();
-
         $questions->update(['sent_to_moderator' => true]);
 
         return redirect()->route('paper_setter.questions.index')
             ->with('success', "$count question(s) sent to moderator successfully.");
+    }
+
+    /** ========== Descriptive Answer Grading ========== */
+
+    public function pendingExams()
+    {
+        $exams = Exam::whereHas('questions', function ($q) {
+                $q->where('type', 'descriptive');
+            })
+            ->whereHas('descriptiveAnswers', function ($q) {
+                $q->whereNull('marks');
+            })
+            ->withCount(['descriptiveAnswers as ungraded_count' => function ($q) {
+                $q->whereNull('marks');
+            }])
+            ->paginate(10);
+
+        return view('paper_setter.exams.index', compact('exams'));
+    }
+
+    public function showExamAnswers(Exam $exam)
+    {
+        $answers = DescriptiveAnswer::with(['question', 'user'])
+            ->where('exam_id', $exam->id)
+            ->whereNull('marks')
+            ->paginate(10);
+
+        return view('paper_setter.exams.answers', compact('exam', 'answers'));
+    }
+
+    public function gradeAnswer(Request $request, DescriptiveAnswer $answer)
+    {
+        $request->validate([
+            'marks' => 'required|integer|min:0|max:' . $answer->question->marks,
+        ]);
+
+        $answer->update([
+            'marks' => $request->marks,
+            'graded_by' => auth()->id(),
+            'graded_at' => now(),
+        ]);
+
+        $result = Result::firstOrNew([
+            'exam_id' => $answer->exam_id,
+            'user_id' => $answer->user_id,
+        ]);
+
+        $result->descriptive_score += $request->marks;
+        $result->save();
+
+        return back()->with('success', 'Marks updated successfully');
+    }
+
+    public function bulkGrade(Request $request, Exam $exam)
+    {
+        $request->validate([
+            'marks.*' => 'required|integer|min:0',
+        ]);
+
+        foreach ($request->marks as $answerId => $marks) {
+            $answer = DescriptiveAnswer::findOrFail($answerId);
+            $questionMarks = $answer->question->marks;
+
+            if ($marks > $questionMarks) {
+                continue; // Skip invalid
+            }
+
+            $answer->update([
+                'marks' => $marks,
+                'graded_by' => auth()->id(),
+                'graded_at' => now(),
+            ]);
+
+            Result::updateOrCreate(
+                ['exam_id' => $exam->id, 'user_id' => $answer->user_id],
+                ['descriptive_score' => DB::raw("descriptive_score + $marks")]
+            );
+        }
+
+        return redirect()->route('paper-setter.exams.answers', $exam)
+            ->with('success', 'Bulk grading completed');
     }
 }

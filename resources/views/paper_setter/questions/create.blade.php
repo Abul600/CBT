@@ -39,7 +39,7 @@
             <textarea name="question_text" id="question_text" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full" rows="4" required>{{ old('question_text') }}</textarea>
         </div>
 
-        <!-- MCQ Options (2x2 Grid) -->
+        <!-- MCQ Options -->
         <div id="mcq_options" class="mt-3">
             <label class="font-medium text-gray-700 mb-2 block">Options:</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -55,10 +55,10 @@
             <label for="correct_option" class="font-medium text-gray-700">Correct Option:</label>
             <select name="correct_option" id="correct_option" class="form-control p-3 rounded-lg border-2 border-gray-300 w-full">
                 <option value="">-- Select Correct Option --</option>
-                <option value="A" {{ old('correct_option') == 'A' ? 'selected' : '' }}>Option A</option>
-                <option value="B" {{ old('correct_option') == 'B' ? 'selected' : '' }}>Option B</option>
-                <option value="C" {{ old('correct_option') == 'C' ? 'selected' : '' }}>Option C</option>
-                <option value="D" {{ old('correct_option') == 'D' ? 'selected' : '' }}>Option D</option>
+                <option value="a" {{ old('correct_option') == 'a' ? 'selected' : '' }}>Option A</option>
+                <option value="b" {{ old('correct_option') == 'b' ? 'selected' : '' }}>Option B</option>
+                <option value="c" {{ old('correct_option') == 'c' ? 'selected' : '' }}>Option C</option>
+                <option value="d" {{ old('correct_option') == 'd' ? 'selected' : '' }}>Option D</option>
             </select>
             <small class="text-muted">Only applicable for MCQ type questions.</small>
         </div>

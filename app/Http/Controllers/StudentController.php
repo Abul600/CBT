@@ -7,13 +7,11 @@ use App\Models\Question;
 use App\Models\StudyMaterial;
 use App\Models\District;
 use App\Models\Result;
+use App\Models\DescriptiveAnswer;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    /**
-     * Show the student dashboard with open exams.
-     */
     public function dashboard()
     {
         $openExams = Exam::where('application_start', '<=', now())
@@ -23,15 +21,13 @@ class StudentController extends Controller
         return view('student.dashboard', compact('openExams'));
     }
 
-    /**
-     * Display released mock and applicable scheduled exams.
-     */
     public function index(Request $request)
     {
         $districts = District::all();
         $selectedDistrict = $request->get('district');
 
         $query = Exam::with('district')
+            ->where('is_released', true)
             ->when($selectedDistrict, fn($q) => $q->where('district_id', $selectedDistrict))
             ->orderBy('created_at', 'desc');
 
@@ -42,9 +38,6 @@ class StudentController extends Controller
         ]);
     }
 
-    /**
-     * Alternative route to display exams with optional district filter.
-     */
     public function takeExam(Request $request)
     {
         $districts = District::all();
@@ -59,27 +52,18 @@ class StudentController extends Controller
         return view('student.exams', compact('districts', 'exams', 'selectedDistrict'));
     }
 
-    /**
-     * Apply for an exam.
-     */
     public function apply(Exam $exam)
     {
         auth()->user()->appliedExams()->syncWithoutDetaching([$exam->id]);
         return back()->with('success', 'Application submitted!');
     }
 
-    /**
-     * Display all results for the authenticated student.
-     */
     public function viewResults()
     {
         $results = auth()->user()->results ?? collect();
         return view('student.results', compact('results'));
     }
 
-    /**
-     * Results index page with completed exams.
-     */
     public function resultIndex()
     {
         $student = auth()->user();
@@ -92,18 +76,12 @@ class StudentController extends Controller
         return view('student.results', compact('results'));
     }
 
-    /**
-     * Display all study materials.
-     */
     public function studyMaterials()
     {
         $materials = StudyMaterial::all();
         return view('student.materials', compact('materials'));
     }
 
-    /**
-     * Search questions based on content.
-     */
     public function search(Request $request)
     {
         $query = $request->input('query');
@@ -112,17 +90,11 @@ class StudentController extends Controller
         return view('student.search-results', compact('results'));
     }
 
-    /**
-     * View a specific exam (details page).
-     */
     public function view(Exam $exam)
     {
         return view('student.exam-view', compact('exam'));
     }
 
-    /**
-     * Start a mock exam.
-     */
     public function startMockExam(Exam $exam)
     {
         if (!$exam->is_mock) {
@@ -132,9 +104,6 @@ class StudentController extends Controller
         return view('student.exam-view', compact('exam'));
     }
 
-    /**
-     * Start a scheduled or mock exam.
-     */
     public function startExam(Exam $exam)
     {
         if (!$exam->is_mock && !auth()->user()->appliedExams->contains($exam->id)) {
@@ -146,9 +115,6 @@ class StudentController extends Controller
         return view('student.exam-take', compact('exam', 'questions'));
     }
 
-    /**
-     * Submit exam answers and store result.
-     */
     public function submitExam(Request $request, Exam $exam)
     {
         $validated = $request->validate([
@@ -156,29 +122,58 @@ class StudentController extends Controller
             'answers.*' => 'nullable|string',
         ]);
 
-        $answers = $validated['answers'];
-        $score = 0;
-        $total = 0;
+        $mcqScore = 0;
+        $totalMarks = 0;
 
-        foreach ($answers as $questionId => $selectedOptionKey) {
-            $question = Question::find($questionId);
-            if ($question && $selectedOptionKey && $selectedOptionKey === $question->correct_option) {
-                $score += $question->marks;
+        foreach ($validated['answers'] as $questionId => $studentAnswer) {
+            $question = Question::findOrFail($questionId);
+            $totalMarks += $question->marks;
+
+            if (in_array($question->type, ['mcq1', 'mcq2'])) {
+                $cleanAnswer = strtolower(trim($studentAnswer));
+                $cleanCorrect = strtolower(trim($question->correct_option));
+
+                \Log::info('Answer Check', [
+                    'Question' => $question->id,
+                    'Student Answer' => $studentAnswer,
+                    'Correct Answer' => $question->correct_option,
+                    'Match' => $cleanAnswer === $cleanCorrect
+                ]);
+
+                if ($cleanAnswer === $cleanCorrect) {
+                    $mcqScore += $question->marks;
+                }
+            } else {
+                DescriptiveAnswer::create([
+                    'question_id' => $questionId,
+                    'user_id' => auth()->id(),
+                    'answer' => $studentAnswer,
+                    'exam_id' => $exam->id
+                ]);
             }
-            $total += $question ? $question->marks : 0;
         }
 
-        Result::updateOrCreate(
-            ['user_id' => auth()->id(), 'exam_id' => $exam->id],
-            ['score' => $score, 'total' => $total]
+        $percentage = $totalMarks > 0 ? ($mcqScore / $totalMarks) * 100 : 0;
+
+        // Load actual question count if needed
+        $exam->loadCount('questions');
+
+        $result = Result::updateOrCreate(
+            ['exam_id' => $exam->id, 'user_id' => auth()->id()],
+            [
+                'mcq_score'   => $mcqScore,
+                'descriptive_score' => null, // If descriptive to be graded later
+                'total'       => $totalMarks,
+                'score'       => $mcqScore,
+                'percentage'  => $percentage,
+                'auto_graded' => $exam->auto_gradable,
+                'status'      => $exam->auto_gradable ? 'graded' : 'pending_review',
+            ]
         );
 
-        return redirect()->route('student.exams.index')->with('success', 'Exam submitted successfully!');
+        return redirect()->route('student.results.show', $result)->with('success', 'Exam submitted successfully!');
     }
 
-    /**
-     * View a specific exam result.
-     */
     public function viewResult(Exam $exam)
     {
         $result = auth()->user()->results()->where('exam_id', $exam->id)->first();

@@ -12,12 +12,10 @@ class Exam extends Model
 {
     use HasFactory;
 
-    // ====== Status Constants ======
     public const STATUS_DRAFT     = 'draft';
     public const STATUS_ACTIVE    = 'active';
     public const STATUS_COMPLETED = 'completed';
 
-    // ====== Fillable Attributes ======
     protected $fillable = [
         'name',
         'description',
@@ -25,8 +23,8 @@ class Exam extends Model
         'application_start',
         'application_end',
         'exam_start',
-        'moderator_id',
-        'district_id',
+        'moderator_id',     // ✅ Nullable foreign key
+        'district_id',      // ✅ Nullable foreign key
         'status',
         'is_active',
         'type',
@@ -36,7 +34,6 @@ class Exam extends Model
         'converted_at',
     ];
 
-    // ====== Attribute Casting ======
     protected $casts = [
         'application_start' => 'datetime',
         'application_end'   => 'datetime',
@@ -50,10 +47,10 @@ class Exam extends Model
         'converted_at'      => 'datetime',
     ];
 
-    // ====== Relationships ======
+    // Relationship: Questions (with pivot marks)
     public function questions(): BelongsToMany
     {
-        return $this->belongsToMany(Question::class, 'exam_question');
+        return $this->belongsToMany(Question::class, 'exam_question')->withPivot('marks');
     }
 
     public function pendingQuestions(): BelongsToMany
@@ -81,7 +78,23 @@ class Exam extends Model
         return $this->belongsToMany(User::class)->withTimestamps();
     }
 
-    // ====== Accessors ======
+    public function studyMaterials()
+    {
+        return $this->hasMany(StudyMaterial::class, 'original_exam_id');
+    }
+
+    public function descriptiveAnswers()
+    {
+        return $this->hasManyThrough(
+            DescriptiveAnswer::class,
+            Question::class,
+            'exam_id',
+            'question_id',
+            'id',
+            'id'
+        );
+    }
+
     public function getExamEndAttribute(): ?Carbon
     {
         return $this->exam_start?->copy()->addMinutes((int) $this->duration);
@@ -126,7 +139,6 @@ class Exam extends Model
         return self::STATUS_DRAFT;
     }
 
-    // ====== Scopes ======
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
@@ -150,7 +162,6 @@ class Exam extends Model
         return $query->where('is_released', true);
     }
 
-    // ====== Helper Methods ======
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE &&
@@ -222,7 +233,6 @@ class Exam extends Model
                $this->status !== 'invalid';
     }
 
-    // ====== Auto Convert Logic ======
     protected static function booted()
     {
         static::saving(function ($exam) {

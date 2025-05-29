@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class QuestionController extends Controller
 {
@@ -34,14 +35,18 @@ class QuestionController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'question_text'   => 'required|string|max:1000',
             'type'            => 'required|in:mcq1,mcq2,descriptive',
             'option_a'        => 'required_if:type,mcq1,mcq2|nullable|string',
             'option_b'        => 'required_if:type,mcq1,mcq2|nullable|string',
             'option_c'        => 'required_if:type,mcq1,mcq2|nullable|string',
             'option_d'        => 'required_if:type,mcq1,mcq2|nullable|string',
-            'correct_option'  => 'required_if:type,mcq1,mcq2|nullable|in:A,B,C,D',
+            'correct_option'  => [
+                'required_if:type,mcq1,mcq2',
+                'nullable',
+                Rule::in(['a', 'b', 'c', 'd']),
+            ],
             'marks'           => 'exclude_if:type,mcq1|exclude_if:type,mcq2|required_if:type,descriptive|integer|min:1|max:100',
         ]);
 
@@ -53,10 +58,15 @@ class QuestionController extends Controller
                 ->with('error', 'Your account is not assigned to a district. Contact the administrator.');
         }
 
-        $marks = match ($request->type) {
+        // Normalize correct_option to lowercase
+        if (isset($validated['correct_option'])) {
+            $validated['correct_option'] = strtolower($validated['correct_option']);
+        }
+
+        $marks = match ($validated['type']) {
             'mcq1' => 1,
             'mcq2' => 2,
-            'descriptive' => $request->marks,
+            'descriptive' => $validated['marks'],
             default => 1,
         };
 
@@ -64,13 +74,13 @@ class QuestionController extends Controller
             'district_id'       => $user->district_id,
             'exam_id'           => null,
             'paper_setter_id'   => $user->id,
-            'question_text'     => $request->question_text,
-            'option_a'          => $request->option_a,
-            'option_b'          => $request->option_b,
-            'option_c'          => $request->option_c,
-            'option_d'          => $request->option_d,
-            'correct_option'    => $request->correct_option,
-            'type'              => $request->type,
+            'question_text'     => $validated['question_text'],
+            'option_a'          => $validated['option_a'] ?? null,
+            'option_b'          => $validated['option_b'] ?? null,
+            'option_c'          => $validated['option_c'] ?? null,
+            'option_d'          => $validated['option_d'] ?? null,
+            'correct_option'    => $validated['correct_option'] ?? null,
+            'type'              => $validated['type'],
             'marks'             => $marks,
             'status'            => 'draft',
         ]);

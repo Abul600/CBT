@@ -42,16 +42,16 @@ class Question extends Model
 
     // ====== Casts ======
     protected $casts = [
-        'status'          => 'string',
-        'correct_option'  => 'string',
-        'marks'           => 'integer',
-        'sent_at'         => 'datetime',
+        'status'         => 'string',
+        'correct_option' => 'array',   // supports multiple answers for MCQ2
+        'marks'          => 'integer',
+        'sent_at'        => 'datetime',
     ];
 
     // ====== Relationships ======
 
     /**
-     * Exams this question belongs to (many-to-many).
+     * Many-to-many: This question can belong to multiple exams.
      */
     public function exams(): BelongsToMany
     {
@@ -59,7 +59,7 @@ class Question extends Model
     }
 
     /**
-     * Paper setter who created this question.
+     * The paper setter who created this question.
      */
     public function paperSetter(): BelongsTo
     {
@@ -67,7 +67,7 @@ class Question extends Model
     }
 
     /**
-     * Moderator associated with this question.
+     * The moderator responsible for this question.
      */
     public function moderator(): BelongsTo
     {
@@ -75,14 +75,30 @@ class Question extends Model
     }
 
     /**
-     * Moderator to whom this question was sent.
+     * The moderator to whom this question was sent for review.
      */
     public function sentToModerator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_to_moderator_id');
     }
 
-    // ====== Query Scopes ======
+    /**
+     * Optional: Original exam this question may belong to.
+     */
+    public function exam(): BelongsTo
+    {
+        return $this->belongsTo(Exam::class);
+    }
+
+    /**
+     * Optional: Study material (if derived from it).
+     */
+    public function studyMaterial(): BelongsTo
+    {
+        return $this->belongsTo(StudyMaterial::class);
+    }
+
+    // ====== Scopes ======
 
     public function scopeDraft($query)
     {
@@ -119,5 +135,18 @@ class Question extends Model
     public function isRejected(): bool
     {
         return $this->status === self::STATUS_REJECTED;
+    }
+
+    // ====== Model Event Validation ======
+
+    protected static function booted()
+    {
+        static::saving(function ($question) {
+            if ($question->exam && $question->exam->type === 'mock') {
+                if (!in_array($question->type, [self::TYPE_MCQ1, self::TYPE_MCQ2])) {
+                    throw new \Exception("Descriptive questions are not allowed in mock exams.");
+                }
+            }
+        });
     }
 }

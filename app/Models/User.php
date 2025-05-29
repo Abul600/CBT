@@ -35,7 +35,7 @@ class User extends Authenticatable
         'district_id',
         'moderator_id',
         'is_moderator',
-        'timezone', // Ensure this is fillable if users can have custom timezones
+        'timezone',
     ];
 
     /**
@@ -203,5 +203,13 @@ class User extends Authenticatable
     public function hasApplied(Exam $exam): bool
     {
         return $this->appliedExams->contains($exam->id);
+    }
+
+    /**
+     * Descriptive answers graded by this user.
+     */
+    public function gradedAnswers()
+    {
+        return $this->hasMany(DescriptiveAnswer::class, 'graded_by');
     }
 }

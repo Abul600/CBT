@@ -10,6 +10,7 @@ use App\Http\Controllers\Moderator\{
     QuestionReviewController
 };
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ResultController;
 use App\Http\Controllers\PaperSetter\{
     QuestionController,
     PaperSetterController as PaperSetterMainController
@@ -198,4 +199,37 @@ Route::get('/exams/mock/{exam}', [StudentController::class, 'startMockExam'])
     
         Route::post('questions/{question}/unassign', [QuestionController::class, 'unassign'])->name('questions.unassign');
     });
+    // Results routes
+Route::prefix('results')->group(function () {
+    // Student routes
+    Route::get('/{result}', [ResultController::class, 'show'])
+        ->name('student.results.show')
+        ->middleware('auth');
     
+    // Moderator routes
+    Route::middleware(['auth', 'can:manage-results'])->group(function () {
+        Route::get('/exam/{exam}', [ResultController::class, 'index'])
+            ->name('moderator.results.index');
+            
+        Route::post('/exam/{exam}/calculate', [ResultController::class, 'calculateFinalResults'])
+            ->name('results.calculate');
+            
+        Route::post('/exam/{exam}/release', [ResultController::class, 'releaseResults'])
+            ->name('results.release');
+    });
+});
+// Paper setter routes
+Route::prefix('paper-setter')->group(function () {
+    Route::get('/exams', [PaperSetterController::class, 'pendingExams'])
+         ->name('paper-setter.exams.index');
+         
+    Route::get('/exams/{exam}/answers', [PaperSetterController::class, 'showExamAnswers'])
+         ->name('paper-setter.exams.answers');
+         
+    Route::post('/exams/{exam}/bulk-grade', [PaperSetterController::class, 'bulkGrade'])
+         ->name('paper-setter.bulk-grade');
+});
+Route::get('/student/exams/{exam}/result', [App\Http\Controllers\StudentController::class, 'viewResult'])
+    ->name('student.viewResult')
+    ->middleware(['auth', 'role:student']);
+Route::get('/results/{result}', [ResultController::class, 'show'])->name('student.results.show')->middleware('auth');

@@ -9,9 +9,10 @@
             <li class="bg-white border rounded p-4 shadow">
                 <p><strong>Exam:</strong> {{ $result->exam->title ?? 'Unknown' }}</p>
                 <p><strong>Score:</strong> {{ $result->score ?? 'N/A' }}</p>
-                <a href="{{ route('student.results.view', $result->exam_id) }}" class="text-blue-600 hover:underline">
-                    View Details
-                </a>
+                <a href="{{ route('student.results.show', $result->id) }}" class="text-blue-600 hover:underline">
+    View Details
+</a>
+
             </li>
         @endforeach
     </ul>
