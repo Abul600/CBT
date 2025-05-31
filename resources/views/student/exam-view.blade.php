@@ -61,7 +61,7 @@
 
         @auth
             @if(auth()->user()->hasRole('student'))
-                <div class="mt-6">
+                <div class="mt-6 mb-8"> <!-- Added mb-8 here for spacing -->
                     @if ($exam->type === 'mock')
                         <a href="{{ route('student.exams.start', $exam) }}"
                            class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">

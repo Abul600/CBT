@@ -49,14 +49,12 @@
             </div>
 
             <div class="card-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" id="prevBtn" disabled>Previous</button>
-                <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
-                <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Submit Exam</button>
+                <button type="button" class="btn btn-prev me-3" id="prevBtn" disabled>Previous</button>
+                <button type="button" class="btn btn-primary me-3" id="nextBtn">Next</button>
+                <button type="submit" class="btn btn-submit" id="submitBtn" style="display: none;">Submit Exam</button>
             </div>
         </form>
     </div>
-
-    <a href="{{ route('student.exams.index') }}" class="btn btn-link mt-3">Back to Exams</a>
 </div>
 
 <style>
@@ -64,6 +62,49 @@
     .form-check-input { transform: scale(1.2); margin-right: 10px; }
     .form-check-label { font-size: 1rem; }
     #progress { font-size: 1rem; }
+
+    /* Previous Button Style */
+    .btn-prev {
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 0 8px #2575fc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .btn-prev:disabled {
+        background: #ccc;
+        box-shadow: none;
+        cursor: not-allowed;
+        color: #666;
+    }
+    .btn-prev:not(:disabled):hover {
+        background: linear-gradient(45deg, #2575fc, #6a11cb);
+        box-shadow: 0 0 15px #6a11cb;
+        transform: scale(1.05);
+    }
+
+    /* Submit Button Style */
+    .btn-submit {
+        background: linear-gradient(45deg, #00c853, #b2ff59);
+        color: #1b5e20;
+        padding: 0.5rem 1.5rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 0 12px #00c853;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background: linear-gradient(45deg, #b2ff59, #00c853);
+        box-shadow: 0 0 20px #b2ff59;
+        transform: scale(1.1);
+        color: #003300;
+    }
 </style>
 
 <script>

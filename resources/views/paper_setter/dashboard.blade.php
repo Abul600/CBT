@@ -22,7 +22,7 @@
                     Manage exam questions and papers effortlessly.
                 </p>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
                     <!-- Manage Questions -->
                     <a href="{{ route('paper_setter.questions.index') }}" 
                        class="group relative block bg-white shadow-md border border-blue-500 rounded-xl p-8 
@@ -57,25 +57,6 @@
                             <div>
                                 <h3 class="text-xl font-semibold text-gray-800">Manage Exam Papers</h3>
                                 <p class="text-sm text-gray-500">Organize exam papers.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Go to Dashboard -->
-                    <a href="{{ route('dashboard') }}" 
-                       class="group relative block bg-white shadow-md border border-yellow-500 rounded-xl p-8 
-                              transition-all duration-300 transform hover:-translate-y-5 hover:scale-110 
-                              hover:shadow-[0_0_40px_#facc15]">
-                        <div class="flex items-center space-x-4">
-                            <div class="bg-yellow-500 text-black p-4 rounded-lg shadow-lg 
-                                        group-hover:scale-110 transition-all">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3L3 9l9 6 9-6-9-6zm0 18V9"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Main Dashboard</h3>
-                                <p class="text-sm text-gray-500">Return to main dashboard.</p>
                             </div>
                         </div>
                     </a>
