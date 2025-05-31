@@ -233,3 +233,16 @@ Route::get('/student/exams/{exam}/result', [App\Http\Controllers\StudentControll
     ->name('student.viewResult')
     ->middleware(['auth', 'role:student']);
 Route::get('/results/{result}', [ResultController::class, 'show'])->name('student.results.show')->middleware('auth');
+// For paper setter exams
+Route::prefix('paper_setter')->middleware(['auth', 'role:paper_setter'])->group(function () {
+    Route::get('/exams', [PaperSetterController::class, 'examIndex'])->name('paper_setter.exams.index');
+    Route::get('/exams/{exam}/grade', [PaperSetterController::class, 'gradeSubmissions'])->name('paper_setter.exams.grade');
+    Route::post('/exams/{exam}/release', [PaperSetterController::class, 'releaseResults'])->name('paper_setter.exams.release');
+});
+// routes of paper setter for managing exams and grading
+Route::prefix('paper_setter')->middleware(['auth', 'role:paper_setter'])->group(function () {
+    Route::get('/exams', [PaperSetterController::class, 'examIndex'])->name('paper_setter.exams.index');
+    Route::get('/exams/{exam}/grade', [PaperSetterController::class, 'gradeSubmissions'])->name('paper_setter.exams.grade');
+    Route::post('/exams/{exam}/release', [PaperSetterController::class, 'releaseResults'])->name('paper_setter.exams.release');
+    Route::put('/answers/{answer}', [PaperSetterController::class, 'updateMarks'])->name('paper_setter.answers.update');
+});

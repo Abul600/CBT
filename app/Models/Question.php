@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Question extends Model
 {
@@ -24,6 +25,9 @@ class Question extends Model
 
     // ====== Fillable Fields ======
     protected $fillable = [
+        'text',
+        'type',
+        'marks',
         'district_id',
         'paper_setter_id',
         'moderator_id',
@@ -33,8 +37,6 @@ class Question extends Model
         'option_c',
         'option_d',
         'correct_option',
-        'type',
-        'marks',
         'status',
         'sent_to_moderator_id',
         'sent_at',
@@ -98,6 +100,30 @@ class Question extends Model
         return $this->belongsTo(StudyMaterial::class);
     }
 
+    /**
+     * The options related to this question (for MCQs).
+     */
+    public function options(): HasMany
+    {
+        return $this->hasMany(Option::class);
+    }
+
+    /**
+     * The answers submitted for this question.
+     */
+    public function answers(): HasMany
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    /**
+     * The descriptive answers submitted for this question.
+     */
+    public function descriptiveAnswers(): HasMany
+    {
+        return $this->hasMany(DescriptiveAnswer::class);
+    }
+
     // ====== Scopes ======
 
     public function scopeDraft($query)
@@ -135,6 +161,11 @@ class Question extends Model
     public function isRejected(): bool
     {
         return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function getIsDescriptiveAttribute(): bool
+    {
+        return $this->type === self::TYPE_DESCRIPTIVE;
     }
 
     // ====== Model Event Validation ======

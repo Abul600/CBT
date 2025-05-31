@@ -153,12 +153,20 @@ class PaperSetterController extends Controller
         return redirect()->back()->with('success', 'User status updated successfully!');
     }
 
-    /** ========== Paper Setter Dashboard & Questions ========== */
+    /** ========== Paper Setter Dashboard ========== */
 
     public function dashboard()
     {
         return view('paper_setter.dashboard');
     }
+
+    public function exams()
+    {
+        $exams = Exam::where('paper_setter_id', Auth::id())->get();
+        return view('paper_setter.exams', compact('exams'));
+    }
+
+    /** ========== Question Management ========== */
 
     public function questionIndex()
     {
@@ -196,16 +204,6 @@ class PaperSetterController extends Controller
         $question = Question::where('id', $id)
             ->where('created_by', auth()->id())
             ->firstOrFail();
-
-        $question->delete();
-
-        return redirect()->route('paper_setter.questions.index')
-            ->with('success', 'Question deleted successfully.');
-    }
-
-    public function destroyQuestionModel(Question $question)
-    {
-        $this->authorize('delete', $question);
 
         $question->delete();
 
@@ -293,7 +291,7 @@ class PaperSetterController extends Controller
             $questionMarks = $answer->question->marks;
 
             if ($marks > $questionMarks) {
-                continue; // Skip invalid
+                continue;
             }
 
             $answer->update([
@@ -310,5 +308,25 @@ class PaperSetterController extends Controller
 
         return redirect()->route('paper-setter.exams.answers', $exam)
             ->with('success', 'Bulk grading completed');
+    }
+
+    public function releaseResults(Exam $exam)
+    {
+        $exam->update(['results_released' => true]);
+        return back()->with('success', 'Results released successfully!');
+    }
+
+    /** ========== Additional Exam Index ========== */
+
+    public function examIndex()
+    {
+        $exams = Exam::whereHas('questions', function ($query) {
+                $query->where('type', 'descriptive');
+            })
+            ->where('moderator_id', auth()->id())
+            ->withCount('submissions')
+            ->get();
+
+        return view('paper_setter.exams.index', compact('exams'));
     }
 }
