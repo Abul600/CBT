@@ -10,7 +10,7 @@
     @include('moderator.dashboard')
 @elseif($user->hasRole('student'))
     @include('student.dashboard')
-@elseif($user->hasRole('paper_setter')) {{-- ✅ FIXED: Corrected role name --}}
+@elseif($user->hasRole('paper_setter')) {{--  FIXED: Corrected role name --}}
     @include('paper_setter.dashboard')
 @else
     {{-- Default fallback for unassigned roles --}}

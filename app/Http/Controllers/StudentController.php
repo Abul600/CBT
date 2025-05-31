@@ -8,6 +8,7 @@ use App\Models\StudyMaterial;
 use App\Models\District;
 use App\Models\Result;
 use App\Models\DescriptiveAnswer;
+use App\Models\Submission;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -122,6 +123,13 @@ class StudentController extends Controller
             'answers.*' => 'nullable|string',
         ]);
 
+        // Step 1: Create Submission record
+        $submission = Submission::create([
+            'exam_id' => $exam->id,
+            'student_id' => auth()->id(),
+            'submitted_at' => now(),
+        ]);
+
         $mcqScore = 0;
         $totalMarks = 0;
 
@@ -144,34 +152,35 @@ class StudentController extends Controller
                     $mcqScore += $question->marks;
                 }
             } else {
+                // Descriptive Answer - Save with submission_id and user_id
                 DescriptiveAnswer::create([
-                    'question_id' => $questionId,
-                    'user_id' => auth()->id(),
-                    'answer' => $studentAnswer,
-                    'exam_id' => $exam->id
+                    'question_id'    => $questionId,
+                    'user_id'        => auth()->id(),
+                    'exam_id'        => $exam->id,
+                    'answer'         => $studentAnswer,
+                    'submission_id'  => $submission->id,
                 ]);
             }
         }
 
         $percentage = $totalMarks > 0 ? ($mcqScore / $totalMarks) * 100 : 0;
 
-        // Load actual question count if needed
-        $exam->loadCount('questions');
-
+        // Save Result
         $result = Result::updateOrCreate(
             ['exam_id' => $exam->id, 'user_id' => auth()->id()],
             [
-                'mcq_score'   => $mcqScore,
-                'descriptive_score' => null, // If descriptive to be graded later
-                'total'       => $totalMarks,
-                'score'       => $mcqScore,
-                'percentage'  => $percentage,
-                'auto_graded' => $exam->auto_gradable,
-                'status'      => $exam->auto_gradable ? 'graded' : 'pending_review',
+                'mcq_score'        => $mcqScore,
+                'descriptive_score'=> null,
+                'total'            => $totalMarks,
+                'score'            => $mcqScore,
+                'percentage'       => $percentage,
+                'auto_graded'      => $exam->auto_gradable,
+                'status'           => $exam->auto_gradable ? 'graded' : 'pending_review',
             ]
         );
 
-        return redirect()->route('student.results.show', $result)->with('success', 'Exam submitted successfully!');
+        return redirect()->route('student.results.show', $result)
+            ->with('success', 'Exam submitted successfully!');
     }
 
     public function viewResult(Exam $exam)

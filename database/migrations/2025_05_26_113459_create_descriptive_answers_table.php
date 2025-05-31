@@ -15,8 +15,14 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('question_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // student who answered
+
+            // Nullable user_id (student who answered)
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+
             $table->foreignId('exam_id')->constrained()->onDelete('cascade');
+
+            // ✅ New: submission reference
+            $table->foreignId('submission_id')->constrained()->onDelete('cascade');
 
             $table->text('answer');
             $table->integer('marks')->nullable();

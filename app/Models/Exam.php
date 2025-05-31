@@ -23,8 +23,8 @@ class Exam extends Model
         'application_start',
         'application_end',
         'exam_start',
-        'moderator_id',     // ✅ Nullable foreign key
-        'district_id',      // ✅ Nullable foreign key
+        'moderator_id',
+        'district_id',
         'status',
         'is_active',
         'type',
@@ -47,7 +47,8 @@ class Exam extends Model
         'converted_at'      => 'datetime',
     ];
 
-    // Relationship: Questions (with pivot marks)
+    // ================= Relationships =================
+
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(Question::class, 'exam_question')->withPivot('marks');
@@ -88,12 +89,19 @@ class Exam extends Model
         return $this->hasManyThrough(
             DescriptiveAnswer::class,
             Question::class,
-            'exam_id',
-            'question_id',
-            'id',
-            'id'
+            'exam_id',       // Foreign key on Question table
+            'question_id',   // Foreign key on DescriptiveAnswer table
+            'id',            // Local key on Exam table
+            'id'             // Local key on Question table
         );
     }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    // ================= Accessors =================
 
     public function getExamEndAttribute(): ?Carbon
     {
@@ -139,6 +147,8 @@ class Exam extends Model
         return self::STATUS_DRAFT;
     }
 
+    // ================= Scopes =================
+
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
@@ -161,6 +171,8 @@ class Exam extends Model
     {
         return $query->where('is_released', true);
     }
+
+    // ================= Helper Methods =================
 
     public function isActive(): bool
     {
@@ -233,6 +245,8 @@ class Exam extends Model
                $this->status !== 'invalid';
     }
 
+    // ================= Events =================
+
     protected static function booted()
     {
         static::saving(function ($exam) {
@@ -252,9 +266,9 @@ class Exam extends Model
         static::retrieved(function ($exam) {
             if ($exam->shouldConvertToMock()) {
                 $exam->update([
-                    'type' => 'mock',
-                    'converted_to_mock' => true,
-                    'converted_at' => now()
+                    'type'               => 'mock',
+                    'converted_to_mock'  => true,
+                    'converted_at'       => now()
                 ]);
             }
         });
